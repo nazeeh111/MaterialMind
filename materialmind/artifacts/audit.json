@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "episodes": 110,
+  "n_seeds": 10,
+  "methods": [
+    "random",
+    "pretrained_greedy",
+    "property_greedy",
+    "uncertainty",
+    "diversity",
+    "gp_ei",
+    "materialmind",
+    "uncalibrated",
+    "no_diversity",
+    "no_cost",
+    "no_online_update"
+  ],
+  "policy_sha256": "f0985a1234f0ffcbcb2a60e25e0cccf0b3504bcd5a997b87cd39a24ea72bda70",
+  "dataset_sha256": "68ddcdd00123871f5b3fea5cab1ae4a8ca4de9ee273e5fd1f7a472624fdfa7f3",
+  "checks": [
+    "complete method/seed matrix",
+    "shared initialization",
+    "unique in-partition evaluations",
+    "revealed labels match source",
+    "cumulative budgets and discovery counts",
+    "finite acquisition scores",
+    "frozen no-online ablation",
+    "model metrics match artifact"
+  ],
+  "gp_first_batch": {
+    "all_finite": true,
+    "n_candidates": 636,
+    "unique_scores": 636,
+    "minimum_log_ei": -2532.051935295777,
+    "maximum_log_ei": 0.7785188027067784,
+    "would_underflow_direct_ei": 3
+  },
+  "runtime_seconds": 1.0299662500619888,
+  "limits": "Retrospective artifact audit; not independent DFT or proof of cryptographic label hiding."
+}

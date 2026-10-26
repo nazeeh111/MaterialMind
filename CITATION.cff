@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "Please cite MATERIALMIND and the upstream data/model papers when using this laboratory."
+title: "MATERIALMIND: A laboratory for uncertainty-aware retrospective crystal discovery"
+type: software
+authors:
+  - name: "Nazeeh"
+version: 0.1.0
+date-released: 2026-10-26
+url: "https://github.com/nazeeh111/MaterialMind"
+repository-code: "https://github.com/nazeeh111/MaterialMind"
+license: MIT
+keywords:
+  - materials discovery
+  - active learning
+  - uncertainty quantification
+  - retrospective evaluation

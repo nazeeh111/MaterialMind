@@ -1,0 +1,147 @@
+{
+  "weights": {
+    "exploration": 0.0,
+    "diversity": 0.2,
+    "cost_exponent": 0.5
+  },
+  "objective": "development discoveries at normalized proxy-cost budget",
+  "development_trials": [
+    {
+      "exploration": 0.0,
+      "diversity": 0.0,
+      "cost_exponent": 0.0,
+      "cost_reward": 20.5,
+      "count_reward": 22.0,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.0,
+      "diversity": 0.0,
+      "cost_exponent": 0.5,
+      "cost_reward": 21.0,
+      "count_reward": 22.0,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.0,
+      "diversity": 0.0,
+      "cost_exponent": 1.0,
+      "cost_reward": 19.0,
+      "count_reward": 19.5,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.0,
+      "diversity": 0.2,
+      "cost_exponent": 0.0,
+      "cost_reward": 19.5,
+      "count_reward": 20.5,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.0,
+      "diversity": 0.2,
+      "cost_exponent": 0.5,
+      "cost_reward": 22.0,
+      "count_reward": 23.5,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.0,
+      "diversity": 0.2,
+      "cost_exponent": 1.0,
+      "cost_reward": 21.0,
+      "count_reward": 21.5,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.2,
+      "diversity": 0.0,
+      "cost_exponent": 0.0,
+      "cost_reward": 20.0,
+      "count_reward": 21.5,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.2,
+      "diversity": 0.0,
+      "cost_exponent": 0.5,
+      "cost_reward": 21.0,
+      "count_reward": 22.0,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.2,
+      "diversity": 0.0,
+      "cost_exponent": 1.0,
+      "cost_reward": 18.5,
+      "count_reward": 18.5,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.2,
+      "diversity": 0.2,
+      "cost_exponent": 0.0,
+      "cost_reward": 20.5,
+      "count_reward": 22.0,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.2,
+      "diversity": 0.2,
+      "cost_exponent": 0.5,
+      "cost_reward": 21.5,
+      "count_reward": 23.0,
+      "development_seeds": [
+        811,
+        812
+      ]
+    },
+    {
+      "exploration": 0.2,
+      "diversity": 0.2,
+      "cost_exponent": 1.0,
+      "cost_reward": 20.0,
+      "count_reward": 20.5,
+      "development_seeds": [
+        811,
+        812
+      ]
+    }
+  ],
+  "test_labels_used": false,
+  "stable_threshold_ev_atom": 0.0,
+  "count_budget": 40,
+  "proxy_cost_budget": 40,
+  "batch_size": 5
+}

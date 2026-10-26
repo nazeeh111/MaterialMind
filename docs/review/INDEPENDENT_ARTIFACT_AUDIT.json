@@ -1,0 +1,345 @@
+{
+  "episodes": 110,
+  "methods": 11,
+  "seeds": 10,
+  "test_stable": 119,
+  "checks": "all traces, references, cumulative budgets, shared initialization, metrics CSV, aggregate means, 880 curve means, frozen policy hash, dataset hash passed",
+  "policy": {
+    "exploration": 0.0,
+    "diversity": 0.2,
+    "cost_exponent": 0.5
+  },
+  "main_results": {
+    "diversity": {
+      "stable_at_budget": {
+        "mean": 10.5,
+        "ci95": [
+          10.1,
+          10.9
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 6.6,
+        "ci95": [
+          6.2,
+          7.1
+        ]
+      }
+    },
+    "gp_ei": {
+      "stable_at_budget": {
+        "mean": 12.9,
+        "ci95": [
+          12.4,
+          13.4
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 12.0,
+        "ci95": [
+          11.5,
+          12.5
+        ]
+      }
+    },
+    "materialmind": {
+      "stable_at_budget": {
+        "mean": 29.6,
+        "ci95": [
+          29.1,
+          30.1
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 28.2,
+        "ci95": [
+          27.5,
+          28.9
+        ]
+      }
+    },
+    "no_cost": {
+      "stable_at_budget": {
+        "mean": 30.0,
+        "ci95": [
+          29.3,
+          30.8
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 27.5,
+        "ci95": [
+          26.7,
+          28.4
+        ]
+      }
+    },
+    "no_diversity": {
+      "stable_at_budget": {
+        "mean": 31.5,
+        "ci95": [
+          31.0,
+          32.0
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 30.3,
+        "ci95": [
+          29.9,
+          30.7
+        ]
+      }
+    },
+    "no_online_update": {
+      "stable_at_budget": {
+        "mean": 29.6,
+        "ci95": [
+          28.7,
+          30.4
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 28.2,
+        "ci95": [
+          27.2,
+          29.1
+        ]
+      }
+    },
+    "pretrained_greedy": {
+      "stable_at_budget": {
+        "mean": 28.6,
+        "ci95": [
+          28.2,
+          29.1
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 27.6,
+        "ci95": [
+          27.2,
+          28.1
+        ]
+      }
+    },
+    "property_greedy": {
+      "stable_at_budget": {
+        "mean": 30.6,
+        "ci95": [
+          29.5,
+          31.5
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 28.6,
+        "ci95": [
+          28.0,
+          29.2
+        ]
+      }
+    },
+    "random": {
+      "stable_at_budget": {
+        "mean": 6.7,
+        "ci95": [
+          5.3,
+          8.3
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 6.3,
+        "ci95": [
+          5.0,
+          7.9
+        ]
+      }
+    },
+    "uncalibrated": {
+      "stable_at_budget": {
+        "mean": 30.3,
+        "ci95": [
+          29.6,
+          31.0
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 28.6,
+        "ci95": [
+          27.9,
+          29.3
+        ]
+      }
+    },
+    "uncertainty": {
+      "stable_at_budget": {
+        "mean": 3.6,
+        "ci95": [
+          2.9,
+          4.4
+        ]
+      },
+      "stable_at_cost_budget": {
+        "mean": 3.6,
+        "ci95": [
+          2.9,
+          4.4
+        ]
+      }
+    }
+  },
+  "calibration": {
+    "calibrated": {
+      "mae_ev_atom": 0.05044575157111285,
+      "rmse_ev_atom": 0.0767052028876884,
+      "brier": 0.09725784390145051,
+      "ece": 0.03479573563718889,
+      "coverage90": 0.9141965678627145,
+      "ci95": {
+        "mae_ev_atom": [
+          0.04608351339464294,
+          0.05504623972315775
+        ],
+        "brier": [
+          0.08227106314545163,
+          0.11344290603645113
+        ],
+        "coverage90": [
+          0.8925665272155084,
+          0.9348837209302325
+        ]
+      },
+      "ci_scope": "Chemical-system cluster bootstrap within this fixed test pool, conditional on fitted model and calibration set.",
+      "mean_interval_width_ev_atom": 0.20968043044636853,
+      "bins": [
+        {
+          "probability": 0.022126474187081826,
+          "stable_fraction": 0.030985915492957747,
+          "n": 355
+        },
+        {
+          "probability": 0.15066844345097363,
+          "stable_fraction": 0.13953488372093023,
+          "n": 86
+        },
+        {
+          "probability": 0.2461182994454714,
+          "stable_fraction": 0.38333333333333336,
+          "n": 60
+        },
+        {
+          "probability": 0.3500340500048643,
+          "stable_fraction": 0.23684210526315788,
+          "n": 38
+        },
+        {
+          "probability": 0.4504284994118637,
+          "stable_fraction": 0.36363636363636365,
+          "n": 22
+        },
+        {
+          "probability": 0.5325607848713211,
+          "stable_fraction": 0.5384615384615384,
+          "n": 13
+        },
+        {
+          "probability": 0.6457847785903723,
+          "stable_fraction": 0.5217391304347826,
+          "n": 23
+        },
+        {
+          "probability": 0.7453481207640172,
+          "stable_fraction": 0.7333333333333333,
+          "n": 15
+        },
+        {
+          "probability": 0.8483261449989731,
+          "stable_fraction": 0.7777777777777778,
+          "n": 9
+        },
+        {
+          "probability": 0.9506469500924215,
+          "stable_fraction": 0.95,
+          "n": 20
+        }
+      ]
+    },
+    "uncalibrated": {
+      "mae_ev_atom": 0.05044575157111285,
+      "rmse_ev_atom": 0.0767052028876884,
+      "brier": 0.09620733468026407,
+      "ece": 0.03251100733662852,
+      "coverage90": 0.9297971918876755,
+      "ci95": {
+        "mae_ev_atom": [
+          0.04608351339464294,
+          0.05504623972315775
+        ],
+        "brier": [
+          0.08240012510162927,
+          0.11086821164839142
+        ],
+        "coverage90": [
+          0.9096671949286846,
+          0.9488372093023256
+        ]
+      },
+      "ci_scope": "Chemical-system cluster bootstrap within this fixed test pool, conditional on fitted model and calibration set.",
+      "mean_interval_width_ev_atom": 0.22367196868372696,
+      "bins": [
+        {
+          "probability": 0.02143626404673857,
+          "stable_fraction": 0.024390243902439025,
+          "n": 328
+        },
+        {
+          "probability": 0.15026727001194798,
+          "stable_fraction": 0.11702127659574468,
+          "n": 94
+        },
+        {
+          "probability": 0.2479940518700905,
+          "stable_fraction": 0.3333333333333333,
+          "n": 78
+        },
+        {
+          "probability": 0.3427897117711986,
+          "stable_fraction": 0.24489795918367346,
+          "n": 49
+        },
+        {
+          "probability": 0.44274377561681294,
+          "stable_fraction": 0.5172413793103449,
+          "n": 29
+        },
+        {
+          "probability": 0.5489156991165183,
+          "stable_fraction": 0.5263157894736842,
+          "n": 19
+        },
+        {
+          "probability": 0.6453789688042537,
+          "stable_fraction": 0.7333333333333333,
+          "n": 15
+        },
+        {
+          "probability": 0.7452071352367601,
+          "stable_fraction": 0.7142857142857143,
+          "n": 7
+        },
+        {
+          "probability": 0.8450571651259198,
+          "stable_fraction": 1.0,
+          "n": 5
+        },
+        {
+          "probability": 0.964238748163186,
+          "stable_fraction": 0.9411764705882353,
+          "n": 17
+        }
+      ]
+    },
+    "quantile90": 1.5419617332922753,
+    "n_calibration": 540,
+    "note": "Chemical-system shift can violate exchangeability; coverage is empirical, not guaranteed."
+  }
+}

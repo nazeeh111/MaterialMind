@@ -1,0 +1,26 @@
+name: Research software checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install -e '.[dev,research]'
+      - run: pytest -q
+        env:
+          MPLBACKEND: Agg
+          MPL_IGNORE_SYSTEM_FONTS: '1'
+          OPENBLAS_NUM_THREADS: '1'
+      - run: python -m build
+      - run: materialmind provenance > /tmp/provenance.json

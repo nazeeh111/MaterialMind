@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+<title id="title">MATERIALMIND LAB</title><desc id="desc">Original branding for a reproducible retrospective materials discovery laboratory. A geometric crystal unit cell symbolizes structure, uncertainty, and evidence.</desc>
+<defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="#b3cbc0" opacity=".35"/></pattern><linearGradient id="atom" x2=".7" y2="1"><stop stop-color="#e2f6d8"/><stop offset="1" stop-color="#75ab8a"/></linearGradient></defs>
+<rect width="1280" height="640" fill="#eef0ec"/><rect x="820" width="460" height="640" fill="#14252b"/><rect x="820" width="460" height="640" fill="url(#grid)"/>
+<g transform="translate(58 49)"><rect width="52" height="52" rx="11" fill="#14252b"/><g stroke="#b6e5c0" fill="none" stroke-width="1.7"><path d="m26 6 18 10v21L26 47 8 37V16Z"/><path d="m8 16 18 11 18-11M26 27v20M26 6v21L8 37m18-10 18 10"/></g><g fill="#d9efdb"><circle cx="26" cy="6" r="2.8"/><circle cx="8" cy="16" r="2.8"/><circle cx="44" cy="16" r="2.8"/><circle cx="26" cy="27" r="3.5"/><circle cx="8" cy="37" r="2.8"/><circle cx="44" cy="37" r="2.8"/><circle cx="26" cy="47" r="2.8"/></g></g>
+<g font-family="Arial,Helvetica,sans-serif" fill="#233136"><text x="130" y="76" font-size="23" font-weight="700" letter-spacing="2">MATERIAL<tspan font-weight="400">MIND</tspan></text><text x="131" y="95" font-size="9" letter-spacing="3.9" fill="#6b8074">LABORATORY</text>
+<text x="58" y="220" font-family="monospace" font-size="11" letter-spacing="2.2" fill="#6c8b73">CRYSTAL DISCOVERY, EXAMINED</text>
+<text x="55" y="303" font-size="68" letter-spacing="-2.8">Make the next</text><text x="55" y="382" font-size="68" letter-spacing="-2.8">evaluation count.</text>
+<text x="59" y="437" font-size="20" fill="#6b8074">Structure-aware selection. Calibrated uncertainty.</text><text x="59" y="468" font-size="20" fill="#6b8074">Reproducible evidence.</text>
+<path d="M58 528H759" stroke="#cbd5ca"/><text x="59" y="567" font-family="monospace" font-size="10" letter-spacing="1.6" fill="#76916f">OPEN SCIENCE / RETROSPECTIVE WBM STUDY</text>
+</g>
+<g transform="translate(1045 315)" stroke="#71948a" fill="none"><path d="m0-173 145 84v167L0 163-145 78V-89Z" stroke-width="1.6"/><path d="m-145-89 145 84 145-84M0-5v168M0-173V-5L-145 78m145-83 145 83" stroke-width="1.2"/><path d="M-145-89V78M145-89V78" stroke-dasharray="3 7"/></g>
+<g fill="url(#atom)"><circle cx="1045" cy="142" r="23"/><circle cx="900" cy="226" r="22"/><circle cx="1190" cy="226" r="23"/><circle cx="1045" cy="310" r="37"/><circle cx="900" cy="393" r="23"/><circle cx="1190" cy="393" r="23"/><circle cx="1045" cy="478" r="23"/></g>
+<g font-family="monospace" fill="#76998c" font-size="9" letter-spacing="2"><text x="857" y="57">STRUCTURE / UNCERTAINTY / EVIDENCE</text><text x="855" y="591">ILLUSTRATIVE UNIT CELL · BRAND MARK</text></g>
+</svg>

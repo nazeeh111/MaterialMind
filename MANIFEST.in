@@ -1,0 +1,8 @@
+include LICENSE DATA_LICENSE.md CITATION.cff CONTRIBUTING.md SECURITY.md RELEASE_NOTES.md requirements-research.lock
+include .github/workflows/ci.yml
+recursive-include docs *.md *.svg *.png *.jpg *.mp4 *.html *.js *.py *.wav *.json
+recursive-include scripts *.py
+recursive-include examples *.md *.cif *.json
+recursive-include tests *.py
+prune docs/launch/composition/snapshots
+global-exclude *.py[cod] .DS_Store

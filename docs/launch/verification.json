@@ -1,0 +1,79 @@
+{
+  "render": "HyperFrames 0.8.33 local; standard; one worker",
+  "duration_seconds": 20,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 30,
+  "frames": 600,
+  "codecs": [
+    "h264",
+    "aac"
+  ],
+  "full_ffmpeg_decode": "passed",
+  "poster_time_seconds": 5.6,
+  "poster_baked_as_frame_zero": true,
+  "poster_rgb_mean_absolute_error": [
+    4.188949170524691,
+    1.0981495949074074,
+    3.361481963734568
+  ],
+  "audio_dbfs": {
+    "mean_volume": -32.1,
+    "max_volume": -19.5
+  },
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "samples": [
+      1.111,
+      3.333,
+      5.556,
+      7.778,
+      10,
+      12.222,
+      14.444,
+      16.667,
+      18.889
+    ],
+    "errors": 0,
+    "warnings": 0,
+    "infos": 8,
+    "note": "Transient intentional crossfade overlap/occlusion; settled actual render frames inspected."
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      1.111,
+      5.556,
+      10,
+      14.444,
+      18.889
+    ],
+    "checked": 27,
+    "passed": 27
+  },
+  "motion_audit_available": false,
+  "launch_sha256": "8a852c5e068cc457e20ad563997155657fdf2e040f41be5732cfd0e8e5d171fe",
+  "input_manifest": "sources.json"
+}

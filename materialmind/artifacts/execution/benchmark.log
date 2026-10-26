@@ -1,0 +1,125 @@
+Benchmark 1/110: seed=0 random
+Benchmark 2/110: seed=0 pretrained_greedy
+Benchmark 3/110: seed=0 property_greedy
+Benchmark 4/110: seed=0 uncertainty
+Benchmark 5/110: seed=0 diversity
+Benchmark 6/110: seed=0 gp_ei
+Benchmark 7/110: seed=0 materialmind
+Benchmark 8/110: seed=0 uncalibrated
+Benchmark 9/110: seed=0 no_diversity
+Benchmark 10/110: seed=0 no_cost
+Benchmark 11/110: seed=0 no_online_update
+Benchmark 12/110: seed=1 random
+Benchmark 13/110: seed=1 pretrained_greedy
+Benchmark 14/110: seed=1 property_greedy
+Benchmark 15/110: seed=1 uncertainty
+Benchmark 16/110: seed=1 diversity
+Benchmark 17/110: seed=1 gp_ei
+Benchmark 18/110: seed=1 materialmind
+Benchmark 19/110: seed=1 uncalibrated
+Benchmark 20/110: seed=1 no_diversity
+Benchmark 21/110: seed=1 no_cost
+Benchmark 22/110: seed=1 no_online_update
+Benchmark 23/110: seed=2 random
+Benchmark 24/110: seed=2 pretrained_greedy
+Benchmark 25/110: seed=2 property_greedy
+Benchmark 26/110: seed=2 uncertainty
+Benchmark 27/110: seed=2 diversity
+Benchmark 28/110: seed=2 gp_ei
+Benchmark 29/110: seed=2 materialmind
+Benchmark 30/110: seed=2 uncalibrated
+Benchmark 31/110: seed=2 no_diversity
+Benchmark 32/110: seed=2 no_cost
+Benchmark 33/110: seed=2 no_online_update
+Benchmark 34/110: seed=3 random
+Benchmark 35/110: seed=3 pretrained_greedy
+Benchmark 36/110: seed=3 property_greedy
+Benchmark 37/110: seed=3 uncertainty
+Benchmark 38/110: seed=3 diversity
+Benchmark 39/110: seed=3 gp_ei
+Benchmark 40/110: seed=3 materialmind
+Benchmark 41/110: seed=3 uncalibrated
+Benchmark 42/110: seed=3 no_diversity
+Benchmark 43/110: seed=3 no_cost
+Benchmark 44/110: seed=3 no_online_update
+Benchmark 45/110: seed=4 random
+Benchmark 46/110: seed=4 pretrained_greedy
+Benchmark 47/110: seed=4 property_greedy
+Benchmark 48/110: seed=4 uncertainty
+Benchmark 49/110: seed=4 diversity
+Benchmark 50/110: seed=4 gp_ei
+Benchmark 51/110: seed=4 materialmind
+Benchmark 52/110: seed=4 uncalibrated
+Benchmark 53/110: seed=4 no_diversity
+Benchmark 54/110: seed=4 no_cost
+Benchmark 55/110: seed=4 no_online_update
+Benchmark 56/110: seed=5 random
+Benchmark 57/110: seed=5 pretrained_greedy
+Benchmark 58/110: seed=5 property_greedy
+Benchmark 59/110: seed=5 uncertainty
+Benchmark 60/110: seed=5 diversity
+Benchmark 61/110: seed=5 gp_ei
+Benchmark 62/110: seed=5 materialmind
+Benchmark 63/110: seed=5 uncalibrated
+Benchmark 64/110: seed=5 no_diversity
+Benchmark 65/110: seed=5 no_cost
+Benchmark 66/110: seed=5 no_online_update
+Benchmark 67/110: seed=6 random
+Benchmark 68/110: seed=6 pretrained_greedy
+Benchmark 69/110: seed=6 property_greedy
+Benchmark 70/110: seed=6 uncertainty
+Benchmark 71/110: seed=6 diversity
+Benchmark 72/110: seed=6 gp_ei
+Benchmark 73/110: seed=6 materialmind
+Benchmark 74/110: seed=6 uncalibrated
+Benchmark 75/110: seed=6 no_diversity
+Benchmark 76/110: seed=6 no_cost
+Benchmark 77/110: seed=6 no_online_update
+Benchmark 78/110: seed=7 random
+Benchmark 79/110: seed=7 pretrained_greedy
+Benchmark 80/110: seed=7 property_greedy
+Benchmark 81/110: seed=7 uncertainty
+Benchmark 82/110: seed=7 diversity
+Benchmark 83/110: seed=7 gp_ei
+Benchmark 84/110: seed=7 materialmind
+Benchmark 85/110: seed=7 uncalibrated
+Benchmark 86/110: seed=7 no_diversity
+Benchmark 87/110: seed=7 no_cost
+Benchmark 88/110: seed=7 no_online_update
+Benchmark 89/110: seed=8 random
+Benchmark 90/110: seed=8 pretrained_greedy
+Benchmark 91/110: seed=8 property_greedy
+Benchmark 92/110: seed=8 uncertainty
+Benchmark 93/110: seed=8 diversity
+Benchmark 94/110: seed=8 gp_ei
+Benchmark 95/110: seed=8 materialmind
+Benchmark 96/110: seed=8 uncalibrated
+Benchmark 97/110: seed=8 no_diversity
+Benchmark 98/110: seed=8 no_cost
+Benchmark 99/110: seed=8 no_online_update
+Benchmark 100/110: seed=9 random
+Benchmark 101/110: seed=9 pretrained_greedy
+Benchmark 102/110: seed=9 property_greedy
+Benchmark 103/110: seed=9 uncertainty
+Benchmark 104/110: seed=9 diversity
+Benchmark 105/110: seed=9 gp_ei
+Benchmark 106/110: seed=9 materialmind
+Benchmark 107/110: seed=9 uncalibrated
+Benchmark 108/110: seed=9 no_diversity
+Benchmark 109/110: seed=9 no_cost
+Benchmark 110/110: seed=9 no_online_update
+{
+  "runtime_seconds": 580.1711354580475,
+  "policy": {
+    "exploration": 0.0,
+    "diversity": 0.2,
+    "cost_exponent": 0.5
+  },
+  "materialmind": {
+    "mean": 28.2,
+    "ci95": [
+      27.5,
+      28.9
+    ]
+  }
+}

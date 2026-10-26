@@ -1,0 +1,21 @@
+{
+  "summary_sha256": "f5885c381c7a4d10fe7dc7bcf9d01b75c715c1c79cc90161a12faa87a637b079",
+  "inputs": {
+    "brand.svg": {
+      "source": "docs/media/brand.svg",
+      "sha256": "5731d676a98918eb21e1b8a2dffb1f95e8688d79290af2ef5526bd9d70daf387"
+    },
+    "lab.png": {
+      "source": "docs/media/lab.png",
+      "sha256": "a5644fa597de6facad42439d4e52fb158824363acd0cd6e4959a92e8b8085443"
+    },
+    "lab-revealed.png": {
+      "source": "docs/media/lab-revealed.png",
+      "sha256": "48754a8b2d44cb23ee8c98ed8999bd05ae7d38b54795ea8519f1a40f9c7e99f7"
+    },
+    "discovery.png": {
+      "source": "materialmind/artifacts/figures/discovery.png",
+      "sha256": "cfa19c058a91ce90cfd6bf1876397a5c95cbeb8fec8e91e797de290ae563ec4b"
+    }
+  }
+}

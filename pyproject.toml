@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "materialmind-lab"
+version = "0.1.0"
+description = "A reproducible laboratory for uncertainty-aware retrospective crystal discovery"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "MIT"
+license-files = ["LICENSE", "DATA_LICENSE.md"]
+authors = [{name = "Nazeeh", email = "nazeeh111@users.noreply.github.com"}]
+dependencies = [
+  "numpy>=1.26,<3", "scipy>=1.13,<2", "pandas>=2.2,<4", "scikit-learn>=1.5,<2",
+  "pymatgen>=2025.1", "fastapi>=0.115,<1", "uvicorn>=0.30,<1", "joblib>=1.4,<2",
+]
+
+[project.optional-dependencies]
+atomistic = ["chgnet==0.4.2", "torch>=2.4,<3"]
+research = ["matplotlib>=3.9,<4"]
+dev = ["pytest>=8,<10", "httpx>=0.27,<1", "build>=1.2"]
+
+[project.scripts]
+materialmind = "materialmind.cli:main"
+
+[project.urls]
+Repository = "https://github.com/nazeeh111/MaterialMind"
+Issues = "https://github.com/nazeeh111/MaterialMind/issues"
+
+[tool.setuptools.packages.find]
+include = ["materialmind*"]
+
+[tool.setuptools.package-data]
+materialmind = ["web/*", "web/vendor/*", "data/*", "artifacts/*", "artifacts/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

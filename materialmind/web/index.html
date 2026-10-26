@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#121b20"><meta name="description" content="MATERIALMIND LAB: a reproducible retrospective materials-discovery laboratory.">
+  <title>MATERIALMIND LAB · Crystal discovery, examined</title>
+  <link rel="icon" href="/assets/mark.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/style.css">
+  <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.js"}}</script>
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to laboratory</a>
+  <header class="topbar">
+    <a href="/" class="brand" aria-label="MaterialMind Lab home"><img src="/assets/mark.svg" alt="" width="34" height="34"><span>MATERIAL<span class="brand-thin">MIND</span><small>LABORATORY</small></span></a>
+    <nav aria-label="Main"><a href="#workspace" class="active">Observatory</a><a href="#evidence">Evidence</a><a href="#history-section">Experiment log</a></nav>
+    <div class="top-actions"><span class="local-indicator"><i></i> LOCAL SESSION</span><button class="button quiet" id="export-session">Export record <span aria-hidden="true">↗</span></button></div>
+  </header>
+  <main id="workspace">
+    <section class="heading">
+      <div><div class="eyebrow"><span class="tiny-square"></span> CRYSTAL STABILITY / RETROSPECTIVE DISCOVERY</div><h1>Make the next evaluation count.</h1><p>Examine the structure. Quantify the uncertainty. Follow the evidence.</p></div>
+      <div class="workspace-meta"><span class="badge">WBM · BOUNDED STUDY</span><div><span id="candidate-count">—</span> candidates <span class="meta-separator">/</span> <span id="evaluated-count">0</span> revealed</div><small id="dataset-subtitle">Connecting to the local research engine</small></div>
+    </section>
+    <div id="global-error" class="error-banner" role="alert" hidden></div>
+    <section class="instrument" aria-label="Candidate observatory">
+      <aside class="candidate-panel">
+        <div class="panel-heading"><div><span class="section-no">01</span><h2>Candidate library</h2></div><button id="import-open" class="icon-button" title="Import a CIF structure" aria-label="Import a CIF structure">＋</button></div>
+        <div class="search-wrap"><span aria-hidden="true">⌕</span><input type="search" id="search" aria-label="Search candidates" placeholder="Formula, element, or identifier"></div>
+        <div class="filter-row"><label class="select-wrap"><span class="sr-only">Dataset partition</span><select id="partition"><option value="all">All available</option><option value="test">Test pool</option><option value="imported">Imported</option></select></label><label class="select-wrap"><span class="sr-only">Sort candidates</span><select id="sort"><option value="acquisition">Selection score ↓</option><option value="mean">Hull distance ↑</option><option value="width">Calibrated interval ↓</option><option value="formula">Formula A–Z</option></select></label></div>
+        <div class="table-heading"><span>STRUCTURE</span><span>P(STABLE)</span></div>
+        <div id="candidate-list" class="candidate-list" role="list" aria-label="Crystal candidates"><div class="empty loading">Loading structures…</div></div>
+        <div class="library-footer"><span id="visible-count">—</span><span><i class="legend-dot selected"></i> selected</span></div>
+      </aside>
+      <section class="structure-panel" aria-label="Three-dimensional crystal structure">
+        <div class="viewer-heading"><div><span class="eyebrow">INITIAL CRYSTAL STRUCTURE</span><h2 id="selected-formula">Select a candidate</h2><span class="mono" id="selected-id">No structure loaded</span></div><span id="selected-split" class="badge muted">—</span></div>
+        <div id="crystal-canvas" class="crystal-canvas" tabindex="0" role="img" aria-label="Interactive crystal. Drag to orbit, scroll to zoom. Arrow keys rotate and plus or minus zoom."><div class="viewer-fallback" id="viewer-fallback" hidden>3D rendering is unavailable. Crystal coordinates and CIF export remain available.</div></div>
+        <div class="viewer-top-tools"><button class="icon-button" id="reset-view" title="Reset camera" aria-label="Reset camera">⌖</button><button class="icon-button" id="toggle-cell" aria-pressed="true" title="Toggle unit cell" aria-label="Toggle unit cell">◇</button><button class="icon-button" id="toggle-bonds" aria-pressed="true" title="Toggle distance contacts" aria-label="Toggle distance contacts">⌁</button></div>
+        <div class="axis-label"><span class="axis a">a</span><span class="axis b">b</span><span class="axis c">c</span><span>FRACTIONAL CELL</span></div>
+        <div class="viewer-bottom"><div id="element-legend" class="element-legend"></div><span class="viewer-hint">DRAG TO ORBIT · SCROLL TO ZOOM</span></div>
+        <div class="structure-metadata"><div><span>Space group</span><strong id="space-group">—</strong></div><div><span>Sites / cell</span><strong id="sites">—</strong></div><div><span>Volume</span><strong id="volume">—</strong></div><button class="button quiet" id="download-cif">CIF <span aria-hidden="true">↓</span></button></div>
+      </section>
+      <aside class="analysis-panel">
+        <div class="panel-heading"><div><span class="section-no">02</span><h2>Stability outlook</h2></div><span class="status-pill">MODEL</span></div>
+        <div class="stability-estimate"><span class="metric-label">Predicted hull distance</span><div><strong id="energy-value">—</strong><span>eV / atom</span></div><p id="interval-text">Calibrated prediction interval</p></div>
+        <div class="energy-axis" id="energy-axis" role="img" aria-label="Signed distance from the DFT reference hull"><div class="axis-line"></div><div class="zero-line"></div><div id="energy-range" class="energy-range"></div><div id="energy-point" class="energy-point"></div><span class="axis-start" id="energy-min">−0.20</span><span class="axis-zero" id="energy-zero">0</span><span class="axis-end" id="energy-max">+0.20</span></div>
+        <div class="probability-row"><span>Stability probability</span><strong id="p-stable">—</strong></div><div class="probability-track"><div id="probability-fill"></div></div>
+        <div class="decision-note"><span class="eyebrow">WHY THIS CANDIDATE?</span><p id="rationale">Choose a candidate to inspect its selection evidence.</p><div class="score-grid"><div><span>Acquisition</span><strong id="acquisition">—</strong></div><div><span>Relative cost</span><strong id="cost">—</strong></div><div><span>Novelty</span><strong id="novelty">—</strong></div></div></div>
+        <div class="evidence-note"><span class="evidence-icon">i</span><p>Predictions are estimates. Reveal a previously computed DFT reference to test this choice.</p></div>
+        <button class="button primary" id="reveal">Reveal DFT reference <span aria-hidden="true">→</span></button><div id="reveal-result" class="reveal-result" aria-live="polite" hidden></div>
+      </aside>
+    </section>
+    <section class="lower-grid" id="evidence">
+      <div class="panel evidence-panel"><div class="panel-heading"><div><span class="section-no">03</span><h2>Discovery efficiency</h2></div><div class="report-links"><a href="/api/report" download="materialmind-analysis.md" class="text-link">Analysis report ↗</a><a href="/api/benchmark" download="materialmind-benchmark.json" class="text-link">Data ↗</a></div></div><div class="chart-heading"><div><h3>How many stable candidates did each strategy find?</h3><p id="benchmark-context">Measured retrospective outcomes. Identical evaluation budgets.</p></div><div class="chart-options"><span class="badge muted" id="seed-badge">MULTIPLE SEEDS</span><div class="mode-switch" aria-label="Budget type"><button id="count-axis" aria-pressed="true">Evaluations</button><button id="cost-axis" aria-pressed="false">Proxy cost</button></div></div></div><div id="discovery-chart" class="discovery-chart"><div class="empty">Benchmark results are loading.</div></div><div id="chart-legend" class="chart-legend"></div><div class="budget-control"><label for="budget"><span id="budget-kind">Inspect evaluation budget</span><strong id="budget-label">20</strong></label><input type="range" id="budget" min="1" max="100" value="20"><div id="budget-summary" class="budget-summary"></div></div><p class="small-note" id="benchmark-note">Curves come from saved experiment outputs. A replay does not perform a new physical calculation.</p></div>
+      <div class="panel log-panel" id="history-section"><div class="panel-heading"><div><span class="section-no">04</span><h2>Experiment log</h2></div><button id="reset-session" class="text-link">Reset session</button></div><div class="log-summary"><div><strong id="log-evaluations">0</strong><span>references revealed</span></div><div><strong id="log-stable">0</strong><span>DFT-stable</span></div><div><strong id="log-cost">0.0</strong><span>normalized proxy units</span></div></div><div id="history" class="history"><div class="empty"><span class="empty-symbol">⌁</span><strong>Your next decision starts here.</strong><p>Inspect a candidate, then reveal its reference. Every choice stays in this session’s exportable research record.</p></div></div><div class="log-footnote"><span class="tiny-square"></span> REFERENCE REPLAY · NO NEW DFT CALCULATION</div></div>
+    </section>
+    <section class="method-strip"><div><span class="eyebrow">EVIDENCE, WITH BOUNDARIES</span><h3>A laboratory for evaluating discovery strategies.</h3></div><p>Existing WBM crystal structures. Pretrained atomistic predictions. Adapted acquisition. Previously computed DFT references. This study makes no claim of synthesis or independent blind benchmark performance.</p><a class="text-link" href="https://github.com/nazeeh111/MaterialMind" target="_blank" rel="noopener">Methods & source ↗</a></section>
+  </main>
+  <footer><span>MATERIALMIND <b>LAB</b></span><span>Structure → prediction → selection → evidence</span><span>REPRODUCIBLE BY DESIGN</span></footer>
+  <dialog id="import-dialog"><form id="import-form"><div class="dialog-heading"><div><span class="eyebrow">BRING YOUR OWN STRUCTURE</span><h2>Import a crystal</h2></div><button type="button" class="icon-button" id="import-close" aria-label="Close import dialog">×</button></div><p>Paste a Crystallographic Information File (CIF). Chemistry and geometry are validated. Stability predictions are available only when the structure matches a cached candidate. New structures have no stability prediction or DFT reference in this retrospective dataset.</p><label for="cif-file" class="file-label">Choose a .cif file <input id="cif-file" type="file" accept=".cif,text/plain"></label><label class="sr-only" for="cif-input">CIF content</label><textarea id="cif-input" rows="12" placeholder="data_my_crystal&#10;_cell_length_a ..." required maxlength="1000000"></textarea><div id="import-error" role="alert" class="import-error" hidden></div><button class="button primary" type="submit" id="import-submit">Validate structure →</button></form></dialog>
+  <script type="module" src="/assets/app.js"></script>
+</body>
+</html>
