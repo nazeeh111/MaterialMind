@@ -51,6 +51,30 @@ Do not use `unique_prototype` from the upstream summary for input-only sample se
 it can retain representatives using reference stability. Do not filter by prediction error
 against reference labels. Both operations would read the outcomes being evaluated.
 
+## Larger studies and optional acceleration
+
+The preparation command accepts `--size` and `--device cpu|cuda|mps`. CPU is the tested
+release default. On suitable hardware an exploratory larger feature extraction can use:
+
+```bash
+python scripts/prepare_data.py --raw .cache/raw --size 6144 --device cuda \
+  --output local-runs/expanded-data
+python scripts/run_benchmark.py --data local-runs/expanded-data/candidates.json \
+  --oracle local-runs/expanded-data/oracle.json --output local-runs/expanded-study \
+  --seeds 10 --budget 80
+```
+
+Use `--device mps` for a compatible Apple GPU or keep `cpu`. Device selection accelerates
+graph features only; the residual ensemble and exact GP baseline remain CPU calculations.
+GPU performance and the expanded experiment above were not benchmarked for this release.
+Exact GP memory and fitting cost grow quickly with the number of known structures; scale
+gradually and measure before committing to a large campaign.
+
+The larger hash-selected sample contains released candidates, so this is an exploratory
+expansion, not a new untouched validation set. A confirmatory follow-up must reserve new
+chemistry/structures, audit released-ID/prototype overlap and freeze decisions before
+viewing the new final labels. Keep all larger-run artifacts separate from the release.
+
 ## Artifact contracts
 
 | File | Meaning |
