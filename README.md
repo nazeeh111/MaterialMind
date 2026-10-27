@@ -188,13 +188,11 @@ contract and keep outcomes behind the reveal interface.
 | [Data attribution](DATA_LICENSE.md) | CC BY 4.0 data and upstream scientific credit |
 | [Contributing](CONTRIBUTING.md) | How to propose and verify improvements |
 
-Google Research's PaperVizAgent was investigated. Its documented rendering route requires
-external model APIs, so the release uses editable, locally authored SVG diagrams and
-plots generated directly from experiment outputs. [CHGNet](https://github.com/CederGroupHub/chgnet),
+The release uses editable SVG diagrams and plots generated directly from experiment
+outputs. [CHGNet](https://github.com/CederGroupHub/chgnet),
 [pymatgen](https://github.com/materialsproject/pymatgen), and
 [Matbench Discovery](https://github.com/janosh/matbench-discovery) are the implemented foundations.
-MatGL, Matbench, BoTorch, eSEN and FAIRChem were investigated and documented rather than
-listed as unimplemented integrations. See the [foundation review](docs/FOUNDATIONS.md).
+See the [foundation review](docs/FOUNDATIONS.md) for methods, alternatives, and limitations.
 
 Code: **MIT**. WBM and published benchmark data: **CC BY 4.0**. Three.js: **MIT**.
 Please cite MATERIALMIND using [`CITATION.cff`](CITATION.cff), and credit the original WBM,
