@@ -49,7 +49,10 @@ The server is intended for local research and binds to loopback.
 3. Reveal a **previously computed DFT reference**. The session updates its surrogate using
    that label and recalculates its rankings. Unselected labels remain absent from the API catalog.
 4. Inspect the saved benchmark under different evaluation or proxy-cost budgets. Export a
-   CIF or the session's predictions, decision record, and revealed references.
+   CIF or a complete session record with crystal coordinates, predictions, model revision,
+   decision history, and revealed references. Imported geometry remains in the downloaded
+   record after a reset. Session state lives in server memory; export it before closing
+   the server or clearing the session.
 
 CIF import validates ordered periodic geometry. A matching catalog structure receives the
 cached prediction workflow. A new structure is shown as geometry only until a compatible

@@ -116,3 +116,31 @@ Quantitative figures retain their Python plotting code and machine-readable meas
 Launch composition source and original score-generation script are in `docs/launch`.
 The movie illustrates real interface operations and saved experiment outputs, not a new
 physical calculation or discovery.
+
+## Portable laboratory sessions
+
+Use **Export record** or `GET /api/session` for an atomic snapshot of the current
+laboratory. Schema 2 includes `application_version`, `metadata.model_revision`, complete
+`candidates` (lattice and fractional sites included), the compatibility `predictions`
+list, and `revealed_references` with preselection evidence. Unmatched imports retain
+`prediction: null` and an explanation rather than an invented stability estimate.
+The UI adds its inspected budget, filters, selected candidate and saved benchmark data.
+No unrevealed oracle labels or internal training features are included.
+
+Session state is stored only in server memory. The JSON file remains useful after a reset
+or restart, but is not a session-restore upload format. Recover an imported CIF from a
+saved candidate using the existing Python adapter:
+
+```python
+import json
+from pathlib import Path
+from materialmind.structures import structure_from_record, to_cif
+
+record = json.loads(Path("materialmind-research-record.json").read_text())
+candidate = next(c for c in record["candidates"] if c["split"] == "import")
+Path("recovered.cif").write_text(to_cif(structure_from_record(candidate)))
+```
+
+Reference-reveal batches are atomic: a failed surrogate fit commits neither labels nor
+history. Retrying a successful reveal is idempotent. Catalog reads and session exports
+are serialized with reveals and resets so their predictions, history and revision agree.

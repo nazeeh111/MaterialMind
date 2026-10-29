@@ -4,8 +4,8 @@ title: "MATERIALMIND: A laboratory for uncertainty-aware retrospective crystal d
 type: software
 authors:
   - name: "Nazeeh"
-version: 0.1.0
-date-released: 2026-10-26
+version: 0.1.1
+date-released: 2026-10-29
 url: "https://github.com/nazeeh111/MaterialMind"
 repository-code: "https://github.com/nazeeh111/MaterialMind"
 license: MIT

@@ -67,3 +67,43 @@ def test_cif_matching_and_unknown_composition_evidence(client):
     assert client.get(f"/api/cif/{sid}").status_code == 200
     assert client.post("/api/reveal", json={"ids": [sid]}).status_code == 400
     assert client.post("/api/import", json={"cif": "not a CIF"}).status_code == 422
+
+
+def test_failed_refit_preserves_model_labels_and_history(client, monkeypatch):
+    import materialmind.learning as learning
+    initial = client.get("/api/catalog").json()
+    fit = learning.fit_model
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("simulated fit failure")
+
+    monkeypatch.setattr(learning, "fit_model", fail)
+    with pytest.raises(RuntimeError, match="simulated fit failure"):
+        client.post("/api/reveal", json={"ids": ["test-0", "test-1"]})
+    assert client.get("/api/catalog").json() == initial
+    monkeypatch.setattr(learning, "fit_model", fit)
+    result = client.post("/api/reveal", json={"ids": ["test-0", "test-1"]}).json()
+    assert result["model_updated"] and result["model_revision"] == 1
+    assert [h["step"] for h in result["history"]] == [1, 2]
+
+
+def test_session_export_preserves_import_geometry_and_only_revealed_labels(client):
+    structure = Structure(Lattice.cubic(4), ["Si"], [[0, 0, 0]])
+    imported = client.post("/api/import", json={"cif": to_cif(structure)}).json()["candidate"]
+    client.post("/api/reveal", json={"ids": ["test-0"]})
+    record = client.get("/api/session").json()
+    assert record["schema_version"] == 2
+    assert record["metadata"]["model_revision"] == 1
+    assert [r["id"] for r in record["revealed_references"]] == ["test-0"]
+    by_id = {r["id"]: r for r in record["candidates"]}
+    assert by_id[imported["id"]] == imported
+    from materialmind.structures import structure_from_record
+    assert np.allclose(structure_from_record(by_id[imported["id"]]).lattice.matrix, structure.lattice.matrix)
+    assert all("reference" not in row for sid, row in by_id.items() if sid != "test-0")
+    assert all("features" not in row for row in by_id.values())
+    client.post("/api/reset")
+    reset = client.get("/api/session").json()
+    assert reset["metadata"]["model_revision"] == 0 and reset["revealed_references"] == []
+    assert imported["id"] not in {r["id"] for r in reset["candidates"]}
+    # The downloaded record retains all geometry even after the live reset.
+    assert by_id[imported["id"]]["structure"] == imported["structure"]

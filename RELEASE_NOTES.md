@@ -1,3 +1,31 @@
+# MATERIALMIND 0.1.1
+
+This maintenance release improves reference-replay consistency, portable records, and
+crystal framing. The frozen dataset, model, policy, benchmark trajectories and scientific
+results remain the same as 0.1.0.
+
+- Reference reveals commit their labels, decision history and fitted model together.
+  A failed refit leaves the session unchanged and can be retried safely.
+- Catalog reads and exports take one consistent snapshot across model updates and resets.
+- Research records now include all candidate coordinates, imported geometry, prediction
+  availability, application version and model revision. The existing `predictions` list
+  remains available; `schema_version: 2` adds complete `candidates` records.
+- UI mutations are serialized while a reveal, reset or import is pending; export waits
+  until the displayed operation completes.
+- Camera framing and clipping adapt to the actual cell size and viewport, including
+  long valid imported cells. Unit-cell coordinates and physical data are unchanged.
+- Regression tests cover failed-refit recovery and export completeness without exposing
+  unrevealed reference labels.
+
+Session records are JSON snapshots, not a session-restore upload format. Live session state
+is in server memory. Export before clearing a session or shutting down the server.
+
+The launch film on the 0.1.0 release remains the original demonstration. See
+`docs/REPORT.md` for the unchanged research findings and `docs/REPRODUCIBILITY.md`
+for scientific reproduction.
+
+---
+
 # MATERIALMIND 0.1.0
 
 The first public research release of a local crystal-discovery laboratory and reproducible
