@@ -73,11 +73,11 @@ export class CrystalViewer {
       }
     }}
     this.root.position.copy(center).multiplyScalar(-1);this.cell.visible=this.cellVisible;this.bonds.visible=this.bondsVisible;
-    this.radius=Math.max(2,size.length()*.65);this.reset();this.render();
+    this.radius=Math.max(2,size.length()*.5+maxAtom);this.reset();this.render();
     const els=[...new Set(positions.map(x=>x.element))].join(', ');
     this.container.setAttribute('aria-label',`Interactive initial crystal with ${sites.length} sites: ${els}. Drag to orbit, scroll to zoom. Arrow keys rotate; plus and minus zoom.`);
   }
-  reset(){if(!this.available)return;const d=(this.radius||5)*2.1;this.camera.position.set(d*.95,d*.65,d*1.18);this.controls.target.set(0,0,0);this.controls.update();this.render();}
+  reset(){if(!this.available)return;const radius=this.radius||5;const vertical=THREE.MathUtils.degToRad(this.camera.fov/2);const horizontal=Math.atan(Math.tan(vertical)*this.camera.aspect);const distance=radius/Math.sin(Math.min(vertical,horizontal))*1.12;this.camera.near=Math.max(.01,radius*.001);this.camera.far=distance*12+radius;this.camera.updateProjectionMatrix();this.controls.minDistance=Math.max(.1,radius*.1);this.controls.maxDistance=distance*8;this.camera.position.set(.95,.65,1.18).normalize().multiplyScalar(distance);this.controls.target.set(0,0,0);this.controls.update();this.render();}
   toggleCell(){this.cellVisible=!this.cellVisible;if(this.cell)this.cell.visible=this.cellVisible;this.render();return this.cellVisible;}
   toggleBonds(){this.bondsVisible=!this.bondsVisible;if(this.bonds)this.bonds.visible=this.bondsVisible;this.render();return this.bondsVisible;}
   keyboard(e){if(!this.available)return;const v=this.camera.position.clone().sub(this.controls.target);const q=new THREE.Quaternion();let handled=true;

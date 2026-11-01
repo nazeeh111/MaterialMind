@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import datetime, timezone
 from functools import lru_cache
 import json
 from pathlib import Path
@@ -102,6 +103,7 @@ def create_app() -> FastAPI:
         # Imports that did not match a reference record have geometry only.
         result.extend(state["imports"].values())
         return {"metadata": {**payload["metadata"], "session_reveals": len(state["revealed"]),
+                            "model_revision": state["model_revision"],
                             "evidence": "retrospective DFT labels; no new DFT or synthesis", "policy": policy},
                 "candidates": result, "history": state["history"]}
 
@@ -115,7 +117,23 @@ def create_app() -> FastAPI:
 
     @app.get("/api/catalog")
     def get_catalog(request: Request, response: Response):
-        return catalog(session(request, response))
+        state = session(request, response)
+        with lock:
+            return deepcopy(catalog(state))
+
+    @app.get("/api/session")
+    def export_session(request: Request, response: Response):
+        """A consistent portable snapshot, including geometry for new imports."""
+        state = session(request, response)
+        with lock:
+            snapshot = deepcopy(catalog(state))
+            return {"application": "MATERIALMIND LAB", "application_version": __version__,
+                    "schema_version": 2, "exported_at": datetime.now(timezone.utc).isoformat(),
+                    "mode": "retrospective_reference_replay", "metadata": snapshot["metadata"],
+                    "candidates": snapshot["candidates"],
+                    "predictions": [{k: row[k] for k in ("id", "formula", "split", "prediction")}
+                                    for row in snapshot["candidates"]],
+                    "revealed_references": snapshot["history"]}
 
     @app.get("/api/benchmark")
     def benchmark():
@@ -151,25 +169,31 @@ def create_app() -> FastAPI:
             policy_path = ROOT / "artifacts/policy.json"
             policy = json.loads(policy_path.read_text()) if policy_path.exists() else None
             before = {r["id"]: r for r in rank_candidates(get_model(state), selected, known, policy)}
+            # Prepare everything before publishing any new label or history entry.
+            # A failed fit must leave the session exactly as it was.
+            revealed = deepcopy(state["revealed"])
+            history = deepcopy(state["history"])
             for sid in dict.fromkeys(value.ids):
-                if sid not in state["revealed"]:
+                if sid not in revealed:
                     label = oracle[sid]
-                    state["revealed"][sid] = {"id": sid, "e_above_hull": label, "stable": label <= 0,
+                    revealed[sid] = {"id": sid, "e_above_hull": label, "stable": label <= 0,
                                               "source": "previously computed WBM DFT"}
                     p = before[sid]
-                    state["history"].append({**state["revealed"][sid], "step": len(state["history"]) + 1,
+                    history.append({**revealed[sid], "step": len(history) + 1,
                         "cost": p["relative_cost"], "timestamp_unix": time.time(),
                         "model_revision_at_selection": state["model_revision"],
                         "prediction_at_selection": {k: p[k] for k in ("predicted_hull", "uncertainty", "interval_low", "interval_high",
                             "stable_probability", "acquisition", "novelty", "relative_cost", "acquisition_weights")}})
-                results.append(state["revealed"][sid])
+                results.append(revealed[sid])
             if selected:
                 train = sorted([r for r in payload["candidates"] if r["split"] == "train"], key=lambda r: r["id"])
-                train += [by_id[h["id"]] for h in state["history"]]
+                train += [by_id[h["id"]] for h in history]
                 calibration = sorted([r for r in payload["candidates"] if r["split"] == "calibration"], key=lambda r: r["id"])
-                state["model"] = fit_model(train, calibration, oracle, seed=0)
-                state["model_revision"] += 1
-        return {"results": results, "history": state["history"], "model_updated": bool(selected)}
+                updated_model = fit_model(train, calibration, oracle, seed=0)
+                state.update({"revealed": revealed, "history": history, "model": updated_model,
+                              "model_revision": state["model_revision"] + 1})
+            return {"results": deepcopy(results), "history": deepcopy(state["history"]),
+                    "model_updated": bool(selected), "model_revision": state["model_revision"]}
 
     @app.post("/api/reset")
     def reset(request: Request, response: Response):
@@ -194,12 +218,14 @@ def create_app() -> FastAPI:
         for record in payload["candidates"]:
             if record["split"] == "test" and record["formula"] == meta["formula"]:
                 if matcher.fit(struct, structure_from_record(record)):
-                    candidate = next(r for r in catalog(state)["candidates"] if r["id"] == record["id"])
+                    with lock:
+                        candidate = next(r for r in catalog(state)["candidates"] if r["id"] == record["id"])
                     return {"candidate": candidate, "matched": True}
         sid = "import-" + secrets.token_hex(6)
         candidate = {"id": sid, **meta, "split": "import", "prediction": None,
                      "prediction_status": "Geometry validated. Stability unavailable: no compatible cached relaxed prediction and DFT reference hull. Use the Python adapter for a documented reference workflow."}
-        state["imports"][sid] = candidate
+        with lock:
+            state["imports"][sid] = candidate
         return {"candidate": candidate, "matched": False}
 
     @app.get("/api/cif/{sid}")
