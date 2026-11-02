@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/media/brand.png" alt="MATERIALMIND — Crystal discovery, examined" width="100%"></p>
+# MaterialMind
 
 <p align="center">
   <a href="https://github.com/nazeeh111/MaterialMind/actions"><img alt="Research software checks" src="https://github.com/nazeeh111/MaterialMind/actions/workflows/ci.yml/badge.svg"></a>
@@ -7,7 +7,7 @@
   <img alt="Evidence: retrospective DFT" src="https://img.shields.io/badge/evidence-retrospective_DFT-8c745b">
 </p>
 
-**Which crystal deserves the next expensive evaluation?** MATERIALMIND is an open research
+**Which crystal deserves the next expensive evaluation?** MaterialMind is an open research
 laboratory for testing that decision. Inspect real crystal structures, adapt a pretrained
 atomistic model, calibrate its uncertainty, and compare active-learning policies against
 previously computed density-functional-theory (DFT) reference labels.
@@ -18,7 +18,7 @@ coefficients on separate development campaigns. It does not claim new DFT calcul
 synthesis, novel materials, a world-first acquisition algorithm, or an official blind
 Matbench Discovery score.
 
-<img src="docs/media/lab.png" alt="The real MATERIALMIND laboratory: WBM crystal cell, candidate ranking, calibrated interval and retrospective reference controls" width="100%">
+<img src="docs/media/lab.png" alt="The real MaterialMind laboratory: WBM crystal cell, candidate ranking, calibrated interval and retrospective reference controls" width="100%">
 
 *The running local application with an actual WBM initial crystal and fitted-model outputs.*
 
@@ -198,5 +198,5 @@ outputs. [CHGNet](https://github.com/CederGroupHub/chgnet),
 See the [foundation review](docs/FOUNDATIONS.md) for methods, alternatives, and limitations.
 
 Code: **MIT**. WBM and published benchmark data: **CC BY 4.0**. Three.js: **MIT**.
-Please cite MATERIALMIND using [`CITATION.cff`](CITATION.cff), and credit the original WBM,
+Please cite MaterialMind using [`CITATION.cff`](CITATION.cff), and credit the original WBM,
 Matbench Discovery, and CHGNet papers listed in [data attribution](DATA_LICENSE.md).

@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#121b20"><meta name="description" content="MATERIALMIND LAB: a reproducible retrospective materials-discovery laboratory.">
-  <title>MATERIALMIND LAB · Crystal discovery, examined</title>
+  <meta name="theme-color" content="#121b20"><meta name="description" content="MaterialMind Lab: a reproducible retrospective materials-discovery laboratory.">
+  <title>MaterialMind Lab · Crystal discovery, examined</title>
   <link rel="icon" href="/assets/mark.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/style.css">
   <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.js"}}</script>
 </head>
 <body>
   <a class="skip" href="#workspace">Skip to laboratory</a>
   <header class="topbar">
-    <a href="/" class="brand" aria-label="MaterialMind Lab home"><img src="/assets/mark.svg" alt="" width="34" height="34"><span>MATERIAL<span class="brand-thin">MIND</span><small>LABORATORY</small></span></a>
+    <a href="/" class="brand" aria-label="MaterialMind Lab home"><img src="/assets/mark.svg" alt="" width="34" height="34"><span>Material<span class="brand-thin">Mind</span><small>LABORATORY</small></span></a>
     <nav aria-label="Main"><a href="#workspace" class="active">Observatory</a><a href="#evidence">Evidence</a><a href="#history-section">Experiment log</a></nav>
     <div class="top-actions"><span class="local-indicator"><i></i> LOCAL SESSION</span><button class="button quiet" id="export-session">Export record <span aria-hidden="true">↗</span></button></div>
   </header>
@@ -53,7 +53,7 @@
     </section>
     <section class="method-strip"><div><span class="eyebrow">EVIDENCE, WITH BOUNDARIES</span><h3>A laboratory for evaluating discovery strategies.</h3></div><p>Existing WBM crystal structures. Pretrained atomistic predictions. Adapted acquisition. Previously computed DFT references. This study makes no claim of synthesis or independent blind benchmark performance.</p><a class="text-link" href="https://github.com/nazeeh111/MaterialMind" target="_blank" rel="noopener">Methods & source ↗</a></section>
   </main>
-  <footer><span>MATERIALMIND <b>LAB</b></span><span>Structure → prediction → selection → evidence</span><span>REPRODUCIBLE BY DESIGN</span></footer>
+  <footer><span>MaterialMind <b>Lab</b></span><span>Structure → prediction → selection → evidence</span><span>REPRODUCIBLE BY DESIGN</span></footer>
   <dialog id="import-dialog"><form id="import-form"><div class="dialog-heading"><div><span class="eyebrow">BRING YOUR OWN STRUCTURE</span><h2>Import a crystal</h2></div><button type="button" class="icon-button" id="import-close" aria-label="Close import dialog">×</button></div><p>Paste a Crystallographic Information File (CIF). Chemistry and geometry are validated. Stability predictions are available only when the structure matches a cached candidate. New structures have no stability prediction or DFT reference in this retrospective dataset.</p><label for="cif-file" class="file-label">Choose a .cif file <input id="cif-file" type="file" accept=".cif,text/plain"></label><label class="sr-only" for="cif-input">CIF content</label><textarea id="cif-input" rows="12" placeholder="data_my_crystal&#10;_cell_length_a ..." required maxlength="1000000"></textarea><div id="import-error" role="alert" class="import-error" hidden></div><button class="button primary" type="submit" id="import-submit">Validate structure →</button></form></dialog>
   <script type="module" src="/assets/app.js"></script>
 </body>
