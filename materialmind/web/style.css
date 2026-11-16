@@ -131,3 +131,55 @@ dialog{color:#183b35}dialog p,dialog .file-label,dialog label{font-size:13px;col
 }
 /* The 400-unit plot is about 268 CSS pixels wide on a 320-pixel page. */
 @media(max-width:380px){.discovery-chart svg text{font-size:18px}}
+
+/* Keep the mineral palette; make the evidence readable at every viewport. */
+.eyebrow, .badge, .section-no, .status-pill, .table-heading, .library-footer,
+.candidate-info, .candidate-prob, .workspace-meta small, .metric-label,
+.stability-estimate > div > span, .stability-estimate p, .energy-axis > span,
+.probability-row, .decision-note .eyebrow, .score-grid span, .evidence-note p,
+.text-link, .chart-heading p, .chart-legend, .budget-control label,
+.budget-summary, .small-note, .log-summary span, .history-row p,
+.history-energy small, .log-footnote, .method-strip .eyebrow, footer,
+footer > span:first-child, footer b, .empty p, .file-label, .file-label input {
+  font-size: 12px; letter-spacing: normal; color: #52634c;
+}
+.heading p, .decision-note p, .method-strip p, .method-strip h3,
+.empty, .empty strong, dialog p, .import-error, .reveal-result {
+  font-size: 14px; color: #43583c; line-height: 1.6;
+}
+.search-wrap input, .select-wrap select, .mode-switch button,
+.chart-heading h3, .button, .analysis-panel > .button {
+  font-size: 12px;
+}
+.search-wrap input::placeholder { color: #62735d; }
+.mode-switch button { color: #52634c; }
+.mode-switch button[aria-pressed=true] { color: #35592e; }
+.viewer-heading .eyebrow, .viewer-heading .mono, .viewer-heading .badge,
+.viewer-hint, .axis-label > span:last-child, .element-item,
+.structure-metadata span, .structure-metadata .button {
+  font-size: 12px; color: #b5cebf; letter-spacing: normal;
+}
+.viewer-bottom { flex-wrap: wrap; }
+.structure-metadata { height: auto; min-height: 76px; flex-wrap: wrap; padding-block: 12px; }
+.structure-metadata strong { font-size: 12px; }
+.structure-panel .badge { background: #19332f; }
+.viewer-top-tools .icon-button { color: #bdd7c9; }
+button:focus-visible, a:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline-color: #36653f;
+}
+.topbar :focus-visible, .structure-panel :focus-visible { outline-color: #b5edc7; }
+.candidate:focus-visible { outline-offset: -4px; }
+.discovery-chart svg text { fill: #52634c; font-size: 12px; }
+.chart-heading { flex-wrap: wrap; }
+.log-summary span { white-space: normal; }
+.log-footnote { line-height: 1.6; }
+.topbar .brand small { color: #b5cebf; }
+@media (max-width:720px){
+ .heading .eyebrow,.workspace-meta small,.chart-legend {font-size:12px}
+ .log-summary{flex-wrap:wrap}.file-label input{max-width:100%}
+ .search-wrap{flex-shrink:0;min-height:35px}
+ .log-panel .history{height:auto;min-height:240px;max-height:360px}
+}
+@media (max-width:380px){.discovery-chart svg text{font-size:18px}}
+@media(max-width:720px){.viewer-bottom{bottom:120px}.axis-label{bottom:172px}}
