@@ -115,3 +115,19 @@ dialog{color:#183b35}dialog p,dialog .file-label,dialog label{font-size:13px;col
  .candidate-panel .picker-controls{flex:0 0 auto;height:auto;min-height:0}
  .structure-panel{flex:0 0 460px}
 }
+
+/* Keep essential specimen labels readable without changing the workbench layout. */
+.candidate-info,.candidate-measures span,.viewer-heading .mono,
+.stability-estimate .model-context{font-size:12px}
+.viewer-hint{font-size:12px;line-height:1.35;letter-spacing:normal}
+.candidate:focus-visible{outline-offset:-3px}
+@media(max-width:720px){
+ .picker-compact span,.picker-compact small{font-size:12px}
+ .viewer-bottom{flex-wrap:wrap;row-gap:6px}
+ .viewer-hint{flex-basis:100%;text-align:left}
+ .discovery-chart{margin-bottom:14px}
+ .discovery-chart svg text{font-size:17px}
+ .discovery-chart svg>text:last-child{transform:translateY(10px)}
+}
+/* The 400-unit plot is about 268 CSS pixels wide on a 320-pixel page. */
+@media(max-width:380px){.discovery-chart svg text{font-size:18px}}
