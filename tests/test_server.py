@@ -78,8 +78,7 @@ def test_failed_refit_preserves_model_labels_and_history(client, monkeypatch):
         raise RuntimeError("simulated fit failure")
 
     monkeypatch.setattr(learning, "fit_model", fail)
-    with pytest.raises(RuntimeError, match="simulated fit failure"):
-        client.post("/api/reveal", json={"ids": ["test-0", "test-1"]})
+    assert client.post("/api/reveal", json={"ids": ["test-0", "test-1"]}).status_code == 503
     assert client.get("/api/catalog").json() == initial
     monkeypatch.setattr(learning, "fit_model", fit)
     result = client.post("/api/reveal", json={"ids": ["test-0", "test-1"]}).json()
@@ -92,7 +91,7 @@ def test_session_export_preserves_import_geometry_and_only_revealed_labels(clien
     imported = client.post("/api/import", json={"cif": to_cif(structure)}).json()["candidate"]
     client.post("/api/reveal", json={"ids": ["test-0"]})
     record = client.get("/api/session").json()
-    assert record["schema_version"] == 2
+    assert record["schema_version"] == 3
     assert record["metadata"]["model_revision"] == 1
     assert [r["id"] for r in record["revealed_references"]] == ["test-0"]
     by_id = {r["id"]: r for r in record["candidates"]}
@@ -107,3 +106,301 @@ def test_session_export_preserves_import_geometry_and_only_revealed_labels(clien
     assert imported["id"] not in {r["id"] for r in reset["candidates"]}
     # The downloaded record retains all geometry even after the live reset.
     assert by_id[imported["id"]]["structure"] == imported["structure"]
+
+
+def exported(client):
+    response = client.get("/api/session")
+    assert response.status_code == 200
+    return response.json()
+
+
+def rehash(record):
+    from materialmind.sessions import digest
+    record["replay_sha256"] = digest(record["replay"])
+    return record
+
+
+def test_restore_replays_batches_exactly_and_can_continue(client):
+    structure = Structure(Lattice.cubic(4), ["Si"], [[0, 0, 0]])
+    imported = client.post("/api/import", json={"cif": to_cif(structure)}).json()["candidate"]
+    revealed = client.post("/api/reveal", json={"ids": ["test-2", "test-0", "test-2"]}).json()
+    assert [r["id"] for r in revealed["results"]] == ["test-2", "test-0"]
+    client.post("/api/reveal", json={"ids": ["test-0", "test-3"]})
+    before = client.get("/api/catalog").json()
+    record = exported(client)
+    assert [b["ids"] for b in record["replay"]["batches"]] == [["test-2", "test-0"], ["test-3"]]
+    client.post("/api/reveal", json={"ids": ["test-5"]})
+    continued = client.get("/api/catalog").json()
+    client.post("/api/reset")
+    restored = client.post("/api/session", json=record)
+    assert restored.status_code == 200
+    assert restored.json() == {"restored": True, **before}
+    assert client.get(f'/api/cif/{imported["id"]}').status_code == 200
+    client.post("/api/reveal", json={"ids": ["test-5"]})
+    resumed = client.get("/api/catalog").json()
+    # New selections have new wall-clock times, but identical scientific state.
+    resumed["history"][-1]["timestamp_unix"] = continued["history"][-1]["timestamp_unix"]
+    assert resumed == continued
+    assert client.post("/api/session", json=record).status_code == 200
+    assert client.get("/api/catalog").json() == before
+
+
+def test_restore_into_new_session_does_not_affect_original(client):
+    client.post("/api/reveal", json={"ids": ["test-1", "test-4"]})
+    record, original_cookie = exported(client), client.cookies.get("materialmind_session")
+    client.cookies.clear()
+    assert client.get("/api/catalog").json()["history"] == []
+    assert client.post("/api/session", json=record).status_code == 200
+    assert client.cookies.get("materialmind_session") != original_cookie
+    assert len(client.get("/api/catalog").json()["history"]) == 2
+    client.post("/api/reset")
+    client.cookies.set("materialmind_session", original_cookie)
+    assert len(client.get("/api/catalog").json()["history"]) == 2
+
+
+def test_uploaded_predictions_labels_metadata_and_ui_context_are_not_authority(client):
+    client.post("/api/reveal", json={"ids": ["test-1"]})
+    before, record = client.get("/api/catalog").json(), exported(client)
+    record["revealed_references"] = [{"id": "test-5", "e_above_hull": -999}]
+    record["metadata"] = {"model_revision": 8000}
+    record["candidates"] = [{"id": "test-5", "reference": {"e_above_hull": -999}}]
+    record["predictions"] = [{"id": "test-0", "prediction": {"mean": -999}}]
+    record["filters"] = {"search": "<script>not executable</script>"}
+    client.post("/api/reset")
+    assert client.post("/api/session", json=record).status_code == 200
+    assert client.get("/api/catalog").json() == before
+    assert all("reference" not in row for row in before["candidates"] if row["id"] != "test-1")
+
+
+@pytest.mark.parametrize("mutation,status", [
+    (lambda r: r.update(schema_version=2), 422),
+    (lambda r: r.update(schema_version=True), 422),
+    (lambda r: r.update(application="another app"), 422),
+    (lambda r: r["replay"]["batches"][0]["ids"].append("test-5"), 422),
+    (lambda r: r["replay"]["contract"].update(seed=1), 422),
+])
+def test_invalid_or_edited_records_do_not_mutate_session(client, mutation, status):
+    client.post("/api/reveal", json={"ids": ["test-0"]})
+    before, record = client.get("/api/catalog").json(), exported(client)
+    mutation(record)
+    assert client.post("/api/session", json=record).status_code == status
+    assert client.get("/api/catalog").json() == before
+
+
+@pytest.mark.parametrize("field", ["dataset_sha256", "policy_sha256", "source_sha256", "dependencies", "runtime", "seed"])
+def test_stale_contract_is_rejected_even_with_recomputed_checksum(client, field):
+    record = exported(client)
+    before = client.get("/api/catalog").json()
+    record["replay"]["contract"][field] = "different"
+    assert client.post("/api/session", json=rehash(record)).status_code == 409
+    assert client.get("/api/catalog").json() == before
+
+
+@pytest.mark.parametrize("ids", [
+    ["train-0"], ["calibration-0"], ["development-0"], ["missing"],
+    ["test-0", "test-0"], ["test-0"] * 21,
+])
+def test_invalid_replay_ids_are_rejected_before_any_refit(client, monkeypatch, ids):
+    import materialmind.learning as learning
+    record, before = exported(client), client.get("/api/catalog").json()
+    record["replay"]["batches"] = [{"ids": ids, "timestamps_unix": [1.] * len(ids)}]
+    def fail(*args, **kwargs):
+        pytest.fail("invalid manifest must be rejected before fitting")
+    monkeypatch.setattr(learning, "fit_model", fail)
+    assert client.post("/api/session", json=rehash(record)).status_code == 422
+    assert client.get("/api/catalog").json() == before
+
+
+def test_repeated_ids_across_batches_and_malformed_imports_are_atomic(client):
+    client.post("/api/reveal", json={"ids": ["test-0"]})
+    before, original = client.get("/api/catalog").json(), exported(client)
+    duplicate = deepcopy(original)
+    duplicate["replay"]["batches"] *= 2
+    assert client.post("/api/session", json=rehash(duplicate)).status_code == 422
+    for structure in (
+        {"lattice": [[0., 0., 0.]] * 3, "sites": [{"element": "Si", "frac": [0., 0., 0.]}]},
+        {"@module": "os", "@class": "system", "command": "never execute"},
+        {"lattice": np.eye(3).tolist(), "sites": [{"element": "NotAnElement", "frac": [0., 0., 0.]}]},
+        {"lattice": np.eye(3).tolist(), "sites": [{"element": "Si", "frac": [0., 0., 0.]}] * 257},
+    ):
+        record = deepcopy(original)
+        record["replay"]["imports"] = [{"id": "import-abcdef012345", "structure": structure}]
+        assert client.post("/api/session", json=rehash(record)).status_code == 422
+        assert client.get("/api/catalog").json() == before
+
+
+def test_failed_second_restore_refit_preserves_entire_existing_session(client, monkeypatch):
+    import materialmind.learning as learning
+    client.post("/api/reveal", json={"ids": ["test-0", "test-1"]})
+    client.post("/api/reveal", json={"ids": ["test-2"]})
+    record = exported(client)
+    client.post("/api/reset")
+    client.post("/api/reveal", json={"ids": ["test-5"]})
+    structure = Structure(Lattice.cubic(4), ["Si"], [[0, 0, 0]])
+    client.post("/api/import", json={"cif": to_cif(structure)})
+    before, fit, calls = client.get("/api/catalog").json(), learning.fit_model, []
+    def fail_second(*args, **kwargs):
+        calls.append([r["id"] for r in args[0]])
+        if len(calls) == 2:
+            raise RuntimeError("fault injection")
+        return fit(*args, **kwargs)
+    monkeypatch.setattr(learning, "fit_model", fail_second)
+    assert client.post("/api/session", json=record).status_code == 503
+    assert [ids[-2:] for ids in calls] == [["test-0", "test-1"], ["test-1", "test-2"]]
+    assert client.get("/api/catalog").json() == before
+    monkeypatch.setattr(learning, "fit_model", fit)
+    assert client.post("/api/session", json=record).status_code == 200
+
+
+def test_byte_limits_cover_chunked_requests_and_preserve_state(client, monkeypatch):
+    before = client.get("/api/catalog").json()
+    monkeypatch.setattr(server, "MAX_SESSION_BYTES", 1024)
+    # The middleware resolves limits per request, so the test need not allocate 16 MiB.
+    response = client.post("/api/session", content=iter([b" " * 700, b" " * 700]),
+                           headers={"Content-Type": "application/json"})
+    assert response.status_code == 413
+    assert client.post("/api/reveal", content=b" " * 4097).status_code == 413
+    assert client.post("/api/import", content=b" " * 2_100_001).status_code == 413
+    assert client.get("/api/catalog").json() == before
+
+
+def test_sessions_do_not_share_fit_lock_and_same_session_remains_serial(client, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    import materialmind.learning as learning
+    client.get("/api/catalog")
+    first_cookie = client.cookies.get("materialmind_session")
+    client.cookies.clear()
+    client.get("/api/catalog")
+    second_cookie = client.cookies.get("materialmind_session")
+    fit, entered, release = learning.fit_model, threading.Event(), threading.Event()
+    def blocked(*args, **kwargs):
+        entered.set()
+        assert release.wait(10), "test did not release fit"
+        return fit(*args, **kwargs)
+    monkeypatch.setattr(learning, "fit_model", blocked)
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        future = pool.submit(client.post, "/api/reveal", json={"ids": ["test-0"]},
+                             headers={"cookie": f"materialmind_session={first_cookie}"})
+        assert entered.wait(10)
+        try:
+            unrelated = pool.submit(client.get, "/api/catalog",
+                                    headers={"cookie": f"materialmind_session={second_cookie}"})
+            assert unrelated.result(timeout=5).json()["history"] == []
+            pending = threading.Event()
+            def reset_first():
+                pending.set()
+                return client.post("/api/reset", headers={"cookie": f"materialmind_session={first_cookie}"})
+            reset = pool.submit(reset_first)
+            assert pending.wait(5)
+            assert not reset.done()
+        finally:
+            release.set()
+        assert future.result(timeout=10).status_code == 200
+        assert reset.result(timeout=10).status_code == 200
+    assert client.get("/api/catalog", headers={"cookie": f"materialmind_session={first_cookie}"}).json()["history"] == []
+
+
+def test_busy_fitting_capacity_rejects_third_update_without_mutation(client, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    import materialmind.learning as learning
+    cookies = []
+    for _ in range(3):
+        client.cookies.clear()
+        client.get("/api/catalog")
+        cookies.append({"cookie": f'materialmind_session={client.cookies.get("materialmind_session")}'})
+    fit, release, both_entered = learning.fit_model, threading.Event(), threading.Barrier(3)
+    def blocked(*args, **kwargs):
+        both_entered.wait(timeout=10)
+        assert release.wait(10)
+        return fit(*args, **kwargs)
+    monkeypatch.setattr(learning, "fit_model", blocked)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(client.post, "/api/reveal", json={"ids": ["test-0"]}, headers=cookie)
+                   for cookie in cookies[:2]]
+        try:
+            both_entered.wait(timeout=10)
+            result = client.post("/api/reveal", json={"ids": ["test-1"]}, headers=cookies[2])
+            assert result.status_code == 503 and "already running" in result.json()["detail"]
+            assert client.get("/api/catalog", headers=cookies[2]).json()["history"] == []
+        finally:
+            release.set()
+        assert all(f.result(timeout=10).status_code == 200 for f in futures)
+
+
+def test_replay_resource_bounds_and_annotations_are_validated(client):
+    import json
+    before, original = client.get("/api/catalog").json(), exported(client)
+    geometry = describe(Structure(Lattice.cubic(4), ["Si"], [[0, 0, 0]]))["structure"]
+    cases = [
+        {"batches": [{"ids": ["test-0"], "timestamps_unix": [1.]}] * 7},
+        {"batches": [{"ids": ["test-0"], "timestamps_unix": [1., 2.]}]},
+        {"batches": [{"ids": ["test-0"], "timestamps_unix": [-1.]}]},
+        {"batches": [{"ids": ["test-0"], "timestamps_unix": [float("nan")]}]},
+        {"batches": [{"ids": ["test-0"], "timestamps_unix": [float("inf")]}]},
+        {"batches": [{"ids": ["test-0"], "timestamps_unix": [True]}]},
+        {"batches": [{"ids": ["test-0"], "timestamps_unix": [1.], "label": -999}]},
+        {"imports": [{"id": f"import-{i:012x}", "structure": geometry} for i in range(33)]},
+        {"imports": [{"id": "import-000000000001", "structure": geometry}] * 2},
+        {"imports": [{"id": "../../data/oracle", "structure": geometry}]},
+    ]
+    for update in cases:
+        record = deepcopy(original)
+        record["replay"].update(update)
+        # Nonfinite JSON must fail validation even before checksum verification.
+        try:
+            rehash(record)
+        except ValueError:
+            pass
+        response = client.post("/api/session", content=json.dumps(record), headers={"content-type": "application/json"})
+        assert response.status_code == 422
+        assert client.get("/api/catalog").json() == before
+
+
+def test_import_capacity_is_enforced_on_live_sessions(client, monkeypatch):
+    import materialmind.sessions as sessions
+    monkeypatch.setattr(sessions, "MAX_IMPORTS", 1)
+    cif = to_cif(Structure(Lattice.cubic(4), ["Si"], [[0, 0, 0]]))
+    assert client.post("/api/import", json={"cif": cif}).status_code == 200
+    before = client.get("/api/catalog").json()
+    assert client.post("/api/import", json={"cif": cif}).status_code == 409
+    assert client.get("/api/catalog").json() == before
+
+
+def test_invalid_first_restore_retains_new_session_cookie_and_empty_restore_works(client):
+    assert client.post("/api/session", json={}).status_code == 422
+    cookie = client.cookies.get("materialmind_session")
+    assert cookie
+    record, before = exported(client), client.get("/api/catalog").json()
+    assert client.post("/api/session", json=record).status_code == 200
+    assert client.cookies.get("materialmind_session") == cookie
+    assert client.get("/api/catalog").json() == before
+
+
+def test_restore_catalog_generation_failure_does_not_publish_rebuilt_state(client, monkeypatch):
+    import materialmind.acquisition as acquisition
+    client.post("/api/reveal", json={"ids": ["test-0", "test-1"]})
+    record = exported(client)
+    client.post("/api/reset")
+    before, rank = client.get("/api/catalog").json(), acquisition.rank_candidates
+    def fail_final_catalog(model, pool, *args, **kwargs):
+        if len(pool) == 6:
+            raise RuntimeError("final response generation failed")
+        return rank(model, pool, *args, **kwargs)
+    monkeypatch.setattr(acquisition, "rank_candidates", fail_final_catalog)
+    assert client.post("/api/session", json=record).status_code == 503
+    monkeypatch.setattr(acquisition, "rank_candidates", rank)
+    assert client.get("/api/catalog").json() == before
+
+
+def test_session_capacity_never_evicts_existing_research(client):
+    client.post("/api/reveal", json={"ids": ["test-0"]})
+    cookie, before = client.cookies.get("materialmind_session"), client.get("/api/catalog").json()
+    for _ in range(127):
+        client.cookies.clear()
+        assert client.post("/api/reset").status_code == 200
+    client.cookies.clear()
+    assert client.post("/api/reset").status_code == 503
+    client.cookies.set("materialmind_session", cookie)
+    assert client.get("/api/catalog").json() == before

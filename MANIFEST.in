@@ -3,6 +3,6 @@ include .github/workflows/ci.yml
 recursive-include docs *.md *.svg *.png *.jpg *.mp4 *.html *.js *.py *.wav *.json
 recursive-include scripts *.py
 recursive-include examples *.md *.cif *.json
-recursive-include tests *.py
+recursive-include tests *.py *.mjs
 prune docs/launch/composition/snapshots
 global-exclude *.py[cod] .DS_Store

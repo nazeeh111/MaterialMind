@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
+import { crystalFit } from './camera-fit.js';
 
 const PALETTE = {H:'#e4e9e4',Li:'#bb99d7',Na:'#a6b2e1',K:'#c59cdb',Mg:'#a4d3ad',Ca:'#b3d997',Sr:'#b8cc9a',Ba:'#bfcf87',Al:'#c4cbd2',Si:'#d5c4a6',P:'#e2b276',S:'#dfd58c',O:'#e19b89',F:'#a8d5b3',Cl:'#a2c99f',Br:'#c89983',I:'#c49fcf',Ti:'#c3c4d3',V:'#a4b8c1',Cr:'#a9c9bd',Mn:'#c5a8cd',Fe:'#dbad86',Co:'#9ab6d4',Ni:'#a0c7ab',Cu:'#d7ac7f',Zn:'#aebbc7',Zr:'#b4c4d5',Nb:'#b7c0d4',Mo:'#adbdcf',W:'#b3bdc5',C:'#8fa4a5',N:'#9fb9e0',B:'#d3b8aa',Pb:'#adabd1',Sn:'#b8c9c7',Bi:'#d3bdce',La:'#adccdd',Ce:'#c5c8dc'};
 const COVALENT = {H:.31,Li:1.28,Na:1.66,K:2.03,Mg:1.41,Ca:1.76,Sr:1.95,Ba:2.15,Al:1.21,Si:1.11,P:1.07,S:1.05,O:.66,F:.57,Cl:1.02,Ti:1.60,V:1.53,Cr:1.39,Mn:1.39,Fe:1.32,Co:1.26,Ni:1.24,Cu:1.32,Zn:1.22,Zr:1.75,Nb:1.64,Mo:1.54,W:1.62,C:.76,N:.71,B:.84};
@@ -24,14 +25,14 @@ export class CrystalViewer {
       const rim=new THREE.DirectionalLight(0xb8d2ec,2.2);rim.position.set(-4,4,-7);this.scene.add(rim);
       this.controls=new OrbitControls(this.camera,this.renderer.domElement);this.controls.enableDamping=false;
       this.controls.minDistance=2;this.controls.maxDistance=100;this.controls.enablePan=true;
-      this.controls.addEventListener('change',()=>this.render());
+      this.controls.addEventListener('change',()=>{if(!this.applyingFit)this.autoFit=false;this.render();});
       this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(container);
       this.cellVisible=true;this.bondsVisible=true;this.available=true;
       container.addEventListener('keydown',e=>this.keyboard(e));
       this.resize();
     } catch(error) { console.warn('Crystal viewer unavailable',error);container.querySelector('.viewer-fallback').hidden=false; }
   }
-  resize(){if(!this.available)return;const w=this.container.clientWidth,h=this.container.clientHeight;this.renderer.setSize(w,h,false);this.camera.aspect=w/Math.max(h,1);this.camera.updateProjectionMatrix();this.render();}
+  resize(){if(!this.available)return;const w=this.container.clientWidth,h=this.container.clientHeight;this.renderer.setSize(w,h,false);this.camera.aspect=w/Math.max(h,1);if(this.autoFit&&this.fitCorners){this.reset();return;}this.camera.updateProjectionMatrix();this.render();}
   render(){if(this.available)this.renderer.render(this.scene,this.camera);}
   disposeGroup(group){if(!group)return;group.traverse(obj=>{obj.geometry?.dispose();if(Array.isArray(obj.material))obj.material.forEach(x=>x.dispose());else obj.material?.dispose();});this.scene.remove(group);}
   setStructure(structure) {
@@ -46,7 +47,7 @@ export class CrystalViewer {
     for(let i=0;i<8;i++)corners.push(cart([i&1,(i>>1)&1,(i>>2)&1]));
     for(let i=0;i<8;i++)for(const bit of [1,2,4])if(!(i&bit)){
       const geometry=new THREE.BufferGeometry().setFromPoints([corners[i],corners[i|bit]]);
-      this.cell.add(new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0x9db8a5,transparent:true,opacity:.38})));}
+      this.cell.add(new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0xb8d4c7,transparent:true,opacity:.62})));}
     // Only periodic boundary images are shown. All positions derive from the CIF lattice.
     const positions=[];const sites=structure.sites||[];
     sites.forEach(site=>{
@@ -73,11 +74,11 @@ export class CrystalViewer {
       }
     }}
     this.root.position.copy(center).multiplyScalar(-1);this.cell.visible=this.cellVisible;this.bonds.visible=this.bondsVisible;
-    this.radius=Math.max(2,size.length()*.5+maxAtom);this.reset();this.render();
+    this.radius=Math.max(2,size.length()*.5+maxAtom);this.fitCorners=corners.map(p=>p.clone().sub(center).toArray());this.fitPadding=maxAtom;this.reset();this.render();
     const els=[...new Set(positions.map(x=>x.element))].join(', ');
     this.container.setAttribute('aria-label',`Interactive initial crystal with ${sites.length} sites: ${els}. Drag to orbit, scroll to zoom. Arrow keys rotate; plus and minus zoom.`);
   }
-  reset(){if(!this.available)return;const radius=this.radius||5;const vertical=THREE.MathUtils.degToRad(this.camera.fov/2);const horizontal=Math.atan(Math.tan(vertical)*this.camera.aspect);const distance=radius/Math.sin(Math.min(vertical,horizontal))*1.12;this.camera.near=Math.max(.01,radius*.001);this.camera.far=distance*12+radius;this.camera.updateProjectionMatrix();this.controls.minDistance=Math.max(.1,radius*.1);this.controls.maxDistance=distance*8;this.camera.position.set(.95,.65,1.18).normalize().multiplyScalar(distance);this.controls.target.set(0,0,0);this.controls.update();this.render();}
+  reset(){if(!this.available)return;this.applyingFit=true;const radius=this.radius||5;const vertical=THREE.MathUtils.degToRad(this.camera.fov/2);const horizontal=Math.atan(Math.tan(vertical)*this.camera.aspect);const distance=this.fitCorners?crystalFit(this.fitCorners,this.fitPadding,this.camera.fov,this.camera.aspect):radius/Math.sin(Math.min(vertical,horizontal))*1.12;this.camera.near=Math.max(.01,radius*.001);this.camera.far=distance*12+radius;this.camera.updateProjectionMatrix();this.controls.minDistance=Math.max(.1,radius*.1);this.controls.maxDistance=distance*8;this.camera.position.set(.95,.65,1.18).normalize().multiplyScalar(distance);this.controls.target.set(0,0,0);this.controls.update();this.applyingFit=false;this.autoFit=true;this.render();}
   toggleCell(){this.cellVisible=!this.cellVisible;if(this.cell)this.cell.visible=this.cellVisible;this.render();return this.cellVisible;}
   toggleBonds(){this.bondsVisible=!this.bondsVisible;if(this.bonds)this.bonds.visible=this.bondsVisible;this.render();return this.bondsVisible;}
   keyboard(e){if(!this.available)return;const v=this.camera.position.clone().sub(this.controls.target);const q=new THREE.Quaternion();let handled=true;

@@ -18,9 +18,9 @@ coefficients on separate development campaigns. It does not claim new DFT calcul
 synthesis, novel materials, a world-first acquisition algorithm, or an official blind
 Matbench Discovery score.
 
-<img src="docs/media/lab.png" alt="The real MaterialMind laboratory: WBM crystal cell, candidate ranking, calibrated interval and retrospective reference controls" width="100%">
+<img src="docs/media/lab-workbench.jpg" alt="MaterialMind workbench with PaMnF6 selected in the WBM candidate list, its crystal structure and model stability estimates" width="100%">
 
-*The running local application with an actual WBM initial crystal and fitted-model outputs.*
+*The local workbench shows a WBM PaMnF₆ structure and current model estimates. The session contains one previously revealed ErI₄ reference; the PaMnF₆ reference has not been revealed in this view. These are retrospective results, not a new DFT calculation.*
 
 [Watch the 20-second launch film](https://github.com/nazeeh111/MaterialMind/releases/download/v0.1.0/launch.mp4) · [Editable film source](docs/launch)
 
@@ -51,8 +51,12 @@ The server is intended for local research and binds to loopback.
 4. Inspect the saved benchmark under different evaluation or proxy-cost budgets. Export a
    CIF or a complete session record with crystal coordinates, predictions, model revision,
    decision history, and revealed references. Imported geometry remains in the downloaded
-   record after a reset. Session state lives in server memory; export it before closing
-   the server or clearing the session.
+    record after a reset. Use **Restore record** to resume a schema-3 export, including
+    the original reveal batches and rebuilt models. Session state lives in server memory;
+    export before closing the server. Restore replaces only the current browser session
+    and requires a matching dataset, policy, code and scientific environment.
+
+See [portable sessions](docs/SESSIONS.md) for the replay contract, API, limits and recovery.
 
 CIF import validates ordered periodic geometry. A matching catalog structure receives the
 cached prediction workflow. A new structure is shown as geometry only until a compatible
