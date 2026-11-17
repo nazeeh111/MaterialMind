@@ -29,7 +29,7 @@ after **each original batch**. Flattening batches would change the selection
 history even when the final training set happened to match. Subsequent reveals
 continue from the reconstructed model.
 
-Uploaded `candidates`, `predictions`, `revealed_references`, metadata and UI context
+For strict restore, uploaded `candidates`, `predictions`, `revealed_references`, metadata and UI context
 are read-only annotations, not restoration inputs. Changing them cannot inject
 labels into the model. Timestamps are preserved user-supplied annotations, not
 authenticated proof of when an evaluation occurred. The checksum detects
@@ -51,6 +51,26 @@ readable research evidence; this strict restore does not automatically migrate
 them or verify their original predictions. No pickle, uploaded model, dynamic
 import or uploaded code is used.
 
+## Replay as new
+
+Use the separate **Replay as new** action to reuse eligible schema-2 choices or a
+checksum-valid schema-3 record with a stale compatibility contract. Confirm that
+this replaces the current browser session. The engine validates the saved held-out
+IDs and their current catalog geometries, recovers effective batch order and
+imports, and recomputes labels, costs and predictions using the current model and
+dataset. Uploaded labels and predictions are not scientific authority. Invalid
+or ambiguous revision sequences, changed structures, corrupt checksums and
+unsupported geometry are refused without replacing the current session.
+
+The resulting schema-3 export has a checksum-covered `replay.origin`: it records
+`replayed_as_new`, the immediate input file's SHA-256, source schema, source
+contract fingerprint when present and server-generated replay time. This marker
+survives a later strict restore and further reveals. Source selection timestamps
+remain annotations; replay time does not certify when the old selections occurred.
+Only the immediate source is noted; no original file or recursive ancestry is
+embedded. Keep the original export separately. The checksum does not authenticate
+its author or establish original-model equivalence.
+
 ## API and failure behavior
 
 * `GET /api/session`: export schema-3 JSON.
@@ -58,6 +78,7 @@ import or uploaded code is used.
   Success returns `restored: true` plus the authoritative catalog, metadata and
   history. The server publishes the replacement only after validation, all refits
   and catalog generation succeed.
+* `POST /api/session/replay`: explicitly replay eligible selections as a new current-contract session. Success returns `replayed: true` plus the current catalog.
 * `POST /api/reset`: clear only this browser session.
 
 HTTP 422 means invalid schema/IDs/geometry/checksum; 409 means an incompatible
@@ -71,7 +92,7 @@ reconstructed state, not duplicate reveals.
 
 ## Resource and ownership bounds
 
-* Restore: at most **16 MiB actual request bytes**, checked before JSON parsing,
+* Restore and replay: at most **16 MiB actual request bytes**, checked before JSON parsing,
   including requests without a Content-Length header.
 * Reveals: at most 20 IDs per batch, no duplicate restored IDs within/across
   batches, and at most `min(1024, held-out pool size)` refits per session. In the
@@ -109,3 +130,23 @@ were compared on 2026-11-15:
 This engineering change does not rerun, retune or alter the frozen scientific study.
 The existing transitive Pydantic dependency is now explicitly constrained to v2,
 whose strict validation API implements the manifest. No new package is introduced.
+
+## Input identity and changing catalogs
+
+An unchanged selected JSON file is submitted as its captured original bytes,
+including UTF-8 BOM and CRLF endings. Its replay origin identifies those exact
+bytes. Editing the displayed JSON instead submits and identifies the edited
+UTF-8 text. The original file is retained in either case.
+
+Replay validates a complete source compatibility identity and its fingerprint;
+an empty self-consistent object is not a complete identity. This is consistency
+validation, not authentication or proof of the old installation's execution.
+Strict restore still requires the current exact compatibility contract.
+
+A saved catalog may contain up to 10,000 rows within the existing 16 MiB request
+limit. Unselected old catalog rows need not exist in the current catalog. Every
+replayed selection must retain its current held-out identity and geometry, and
+each imported structure must have an explicit import partition and valid geometry.
+Malformed imports are refused, rather than silently omitted. Current model results
+are recalculated. A confirmed session reset removes its replay-origin status.
+

@@ -5,15 +5,17 @@ from contextlib import contextmanager
 from copy import deepcopy
 from functools import lru_cache
 import json
+import hashlib
 from pathlib import Path
 import secrets
 import threading
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.concurrency import run_in_threadpool
 
 from materialmind import __version__
 from materialmind.sessions import MAX_SESSION_BYTES, ReplayError, Session, SessionEngine, new_state
@@ -24,6 +26,11 @@ ROOT = Path(__file__).parent
 
 class RevealRequest(BaseModel):
     ids: list[str] = Field(min_length=1, max_length=20)
+
+
+class BatchRevealRequest(BaseModel):
+    count: int = Field(strict=True, ge=1, le=20)
+    snapshot: str = Field(pattern=r'^[0-9a-f]{64}$')
 
 
 class ImportRequest(BaseModel):
@@ -37,8 +44,8 @@ class BodyLimit:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        limits = {"/api/session": MAX_SESSION_BYTES, "/api/import": 2_100_000,
-                  "/api/reveal": 4096, "/api/reset": 1024}
+        limits = {"/api/session": MAX_SESSION_BYTES, "/api/session/replay": MAX_SESSION_BYTES, "/api/import": 2_100_000,
+                  "/api/reveal": 4096, "/api/recommendations/reveal": 4096, "/api/reset": 1024}
         limit = limits.get(scope.get("path"))
         if scope["type"] != "http" or scope.get("method") != "POST" or limit is None:
             return await self.app(scope, receive, send)
@@ -135,6 +142,21 @@ def create_app() -> FastAPI:
         with owner.lock:
             return engine.catalog(owner.state)
 
+    @app.get('/api/recommendations')
+    def recommendations(request: Request, response: Response, count: int = Query(default=5, ge=1, le=20)):
+        owner = session(request, response)
+        with owner.lock, fitting():
+            return engine.recommend(owner.state, count)
+
+    @app.post('/api/recommendations/reveal')
+    def reveal_recommendation(value: BatchRevealRequest, request: Request, response: Response):
+        owner = session(request, response)
+        with owner.lock, fitting():
+            ids = engine.reveal_recommendation(owner.state, value.count, value.snapshot)
+            return {'results': [deepcopy(owner.state['revealed'][sid]) for sid in ids],
+                    'history': deepcopy(owner.state['history']), 'model_updated': True,
+                    'model_revision': owner.state['model_revision']}
+
     @app.get("/api/session")
     def export_session(request: Request, response: Response):
         owner = session(request, response)
@@ -150,6 +172,19 @@ def create_app() -> FastAPI:
             snapshot = engine.catalog(restored)
             owner.state = restored
             return {"restored": True, **snapshot}
+
+    @app.post("/api/session/replay")
+    async def replay_session(value: dict, request: Request, response: Response):
+        """Explicitly reconstruct choices with the current model and publish once."""
+        source_sha256 = hashlib.sha256(await request.body()).hexdigest()
+        owner = session(request, response)
+        def reconstruct():
+            with owner.lock, fitting():
+                restored = engine.restore(value, replay_as_new=True, source_sha256=source_sha256)
+                snapshot = engine.catalog(restored)
+                owner.state = restored
+                return {"replayed": True, **snapshot}
+        return await run_in_threadpool(reconstruct)
 
     @app.get("/api/benchmark")
     def benchmark():

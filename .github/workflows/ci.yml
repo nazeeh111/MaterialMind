@@ -24,3 +24,15 @@ jobs:
           OPENBLAS_NUM_THREADS: '1'
       - run: python -m build
       - run: materialmind provenance > /tmp/provenance.json
+  ui:
+    name: Browser state logic · Node 24
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: UI cancellation, ownership and recovery regressions
+        run: node --test tests/*.mjs
