@@ -7,22 +7,15 @@
   <img alt="Evidence: retrospective DFT" src="https://img.shields.io/badge/evidence-retrospective_DFT-8c745b">
 </p>
 
-**Which crystal deserves the next expensive evaluation?** MaterialMind is an open research
-laboratory for testing that decision. Inspect real crystal structures, adapt a pretrained
-atomistic model, calibrate its uncertainty, and compare active-learning policies against
-previously computed density-functional-theory (DFT) reference labels.
+**Choose a crystal. Inspect the model. Reveal what it missed.** MaterialMind is a local research laboratory for comparing crystal-stability predictions and active-learning decisions against **existing computed DFT references**. Rotate real initial cells, inspect uncertainty and query costs, then export and restore the evidence behind a decision.
 
-This release studies **3,072 existing WBM structures**, with **641 candidates in a final
-chemical-system-held-out pool**. It trains a residual stability model and fits acquisition
-coefficients on separate development campaigns. It does not claim new DFT calculations,
-synthesis, novel materials, a world-first acquisition algorithm, or an official blind
-Matbench Discovery score.
+The selected PaMnF₆ example ranks first but its archived energy falls outside the model's 90% interval. Both energies still satisfy the fixed reference-hull stability criterion. That distinction is the point: a plausible selection is not proof that its uncertainty is reliable.
 
-<img src="docs/media/lab-workbench.jpg" alt="MaterialMind workbench with PaMnF6 selected in the WBM candidate list, its crystal structure and model stability estimates" width="100%">
+<picture><source media="(max-width: 600px)" srcset="docs/presentation/query-mobile.svg"><img src="docs/presentation/query.svg" alt="Actual PaMnF6 initial crystal and pre-reveal model interval beside the archived DFT energy, which lies outside the interval; both are below the fixed reference hull. The fitted query score is shown from recorded components." width="100%"></picture>
 
-*The local workbench shows a WBM PaMnF₆ structure and current model estimates. The session contains one previously revealed ErI₄ reference; the PaMnF₆ reference has not been revealed in this view. These are retrospective results, not a new DFT calculation.*
+[Follow the worked case](docs/presentation/README.md) · [Download its native records and runnable source](docs/presentation/worked-example.zip) · [Read the scientific report](docs/REPORT.md)
 
-[Watch the 20-second launch film](https://github.com/nazeeh111/MaterialMind/releases/download/v0.1.0/launch.mp4) · [Editable film source](docs/launch)
+This release uses **3,072 existing WBM structures**, with **641 candidates in the final chemical-system-held-out pool**. It performs retrospective prediction and label replay, not new DFT, synthesis or an official blind benchmark. The fitted policy **did not outperform adapted greedy** in the released study.
 
 ## Run the laboratory
 
@@ -62,6 +55,12 @@ CIF import validates ordered periodic geometry. A matching catalog structure rec
 cached prediction workflow. A new structure is shown as geometry only until a compatible
 relaxed-energy prediction and composition reference are supplied. The application does not
 invent a stability estimate for an unsupported imported composition.
+
+## Inside the local workbench
+
+<img src="docs/presentation/workbench-desktop.png" alt="Actual local MaterialMind workbench after revealing the PaMnF6 archived reference, showing the initial crystal, updated model, reference result and retained research log." width="100%">
+
+*This capture is after the reveal and refit. The current estimate differs from the selection-time prediction preserved in the worked case. [Phone view](docs/presentation/workbench-mobile.png) · [Save and restore contract](docs/SESSIONS.md) · [20-second launch film](https://github.com/nazeeh111/MaterialMind/releases/download/v0.1.0/launch.mp4) · [Editable film source](docs/launch).*
 
 ## What the experiment found
 

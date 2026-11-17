@@ -1,0 +1,19 @@
+{
+  "desktop": [
+    1440,
+    1050
+  ],
+  "mobile": {
+    "width": 375,
+    "isMobile": true,
+    "layoutWidth": 375,
+    "noOverflow": true
+  },
+  "actualUIRevealAndDownload": true,
+  "freshBrowserRestore": true,
+  "invalidCIFKeepsReveal": true,
+  "invalidChecksumRefused": true,
+  "escapeClosesDialogs": true,
+  "crystalKeyboardExercised": true,
+  "errors": []
+}

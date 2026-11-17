@@ -1,0 +1,27 @@
+{
+  "source_commit": "2340213234ab6ddf8e0f5f86361d71ac432ff59c",
+  "source_tree": "318e61f90c72151080d2a8ae16fe438eeb5f38fd",
+  "encoding": "All eight actual initial sites and twelve cell edges with an orthonormal camera basis and common physical scale; exact pre-reveal interval/reference energies and acquisition arithmetic. Current-main retrospective archived labels, no new DFT.",
+  "files": {
+    "README.md": "082b798712366af74bf6f517493f882de1d2d16433c616e901d64a01175b232b",
+    "after.json": "554b9a86b401fd9ef1bed97ac5951c75bbd91d965eb1c0b22b5fe8e864d870c8",
+    "before.json": "8abb5129ec583dd85c1bf7cf5549b82c2784e38061bbb2ff069df63e5207807f",
+    "browser.json": "268323d570350fbc41c57a0407d5366a3005924b7b2fe2778835e4aa6895312f",
+    "edited-import.json": "cd7af198729ee4adbcc21de980a29543407339d5e5f38a46759cbb17b18d92d7",
+    "edited.cif": "78945dfcdf07dd7a22665d7298a083c7146703094912dfd53fa4568e2146663c",
+    "figure-data.json": "fe24f157e3baa1751eaf4f5cb4bc9cffb0a847e196094860dc0d6974ca6aeace",
+    "figure.py": "f25624c0a2db9c572135ed34b33b21784c1cd3066c7edb7aad96505fdce75992",
+    "query-mobile.png": "5f7ce49c9b105c7e39bbb67b4ef9ee01803631f1bdedb2e173c5bd165dccaf30",
+    "query-mobile.svg": "328da93ae939f901ba2b8a665fa58f4e034635528f211049ddd54e66108bbc04",
+    "query.png": "5cf3a616884f00944f9919649d43c46d20591acba3659f484d28d3ca0ba092d1",
+    "query.svg": "01ed4006f25cc04eda3adba86b4e02fd3b237bcbd811bbed62875e1011fa8f87",
+    "reopen-check.json": "e0097cbf99d1ed4ec8ff9a09b8b51ddea8bbce78bda69fcb4c0fb4bf1abe9fa3",
+    "reveal.json": "eb8e5b52a19817452888d82d9c331ab57a0f73a686c1b0d5c8d6e1f212494623",
+    "selected.cif": "46e5066fca3e1ec42f5f2d9dcf42f4f496d431c5eac693e1a496066fd147c7f8",
+    "session.json": "826c99b5993bc4b4ee4d0657058074c6ab3978ad51129584c5d8fe357843e26d",
+    "ui-session.json": "6f881d9a6bc576939af9a5c6a4056e55591f8c74119aba07edc1048178b6cabf",
+    "workbench-desktop.png": "898bc29cc5dd241afb488320365c4cbc5a8e32aa83686f9b31ff268bb0ed43ae",
+    "workbench-mobile.png": "ebf761d0b4769e0bee38db6d4655054b202b26608070ddb886ca14a87cc28980",
+    "worked-example.zip": "adefa0d510b9af95091b1b8f6c5ee95910d0a5695232ce605e9773cab776aa79"
+  }
+}

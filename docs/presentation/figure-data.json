@@ -1,0 +1,172 @@
+{
+  "id": "wbm-5-6788",
+  "initial_structure": {
+    "lattice": [
+      [
+        5.2942381814,
+        0.0,
+        3.0569126127
+      ],
+      [
+        1.7616898537,
+        4.9860858181,
+        3.0573704488
+      ],
+      [
+        0.0,
+        0.0,
+        6.10730427
+      ]
+    ],
+    "sites": [
+      {
+        "element": "Pa",
+        "frac": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      {
+        "element": "Mn",
+        "frac": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "element": "F",
+        "frac": [
+          0.245423,
+          0.75553,
+          0.243226
+        ]
+      },
+      {
+        "element": "F",
+        "frac": [
+          0.755284,
+          0.242881,
+          0.245773
+        ]
+      },
+      {
+        "element": "F",
+        "frac": [
+          0.244716,
+          0.757119,
+          0.754227
+        ]
+      },
+      {
+        "element": "F",
+        "frac": [
+          0.754577,
+          0.24447,
+          0.756774
+        ]
+      },
+      {
+        "element": "F",
+        "frac": [
+          0.243195,
+          0.245452,
+          0.756265
+        ]
+      },
+      {
+        "element": "F",
+        "frac": [
+          0.756805,
+          0.754548,
+          0.243735
+        ]
+      }
+    ]
+  },
+  "pre_reveal_prediction": {
+    "mean": -2.198549726666667,
+    "sigma": 0.05562439657782166,
+    "lower": -2.284320417627142,
+    "upper": -2.1127790357061924,
+    "p_stable": 0.9990757855822551,
+    "cost": 1.0,
+    "raw_cost": 1.125,
+    "novelty": 1.4586532486640271,
+    "acquisition": 1.2908064353150606,
+    "exploration": 0.42885345480237397,
+    "relative_cost": 1.0,
+    "acquisition_weights": {
+      "exploration": 0.0,
+      "diversity": 0.2,
+      "cost_exponent": 0.5
+    },
+    "acquisition_note": "Expected stability plus calibrated-error exploration and embedding novelty, divided by relative cost to the fitted exponent."
+  },
+  "archived_reference_ev_atom": -1.951794,
+  "orthonormal_camera_basis": [
+    [
+      0.7071067811865475,
+      -0.7071067811865475,
+      0
+    ],
+    [
+      0.4082482904638631,
+      0.4082482904638631,
+      -0.8164965809277261
+    ]
+  ],
+  "cell_edges": [
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      1,
+      5
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      2,
+      6
+    ],
+    [
+      3,
+      7
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      4,
+      6
+    ],
+    [
+      5,
+      7
+    ],
+    [
+      6,
+      7
+    ]
+  ],
+  "reference_outside_interval": true,
+  "acquisition_recomputed": 1.2908064353150606
+}

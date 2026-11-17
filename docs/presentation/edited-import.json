@@ -1,0 +1,108 @@
+{
+  "candidate": {
+    "id": "import-2d05a78aaa00",
+    "formula": "PaMnF6",
+    "nsites": 8,
+    "elements": [
+      "F",
+      "Mn",
+      "Pa"
+    ],
+    "chemistry_group": "F-Mn-Pa",
+    "spacegroup": "R-3",
+    "spacegroup_number": 148,
+    "crystal_system": "trigonal",
+    "volume": 166.0542543531112,
+    "density": 3.999635072924722,
+    "cost": 1.125,
+    "structure": {
+      "lattice": [
+        [
+          5.34665979022556,
+          0.0,
+          3.087181042636936
+        ],
+        [
+          1.779133461930685,
+          5.035456215151192,
+          3.087643412159354
+        ],
+        [
+          0.0,
+          0.0,
+          6.16777656
+        ]
+      ],
+      "sites": [
+        {
+          "element": "Pa",
+          "frac": [
+            0.5,
+            0.5,
+            0.5
+          ]
+        },
+        {
+          "element": "Mn",
+          "frac": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "element": "F",
+          "frac": [
+            0.245423,
+            0.75553,
+            0.243226
+          ]
+        },
+        {
+          "element": "F",
+          "frac": [
+            0.755284,
+            0.242881,
+            0.245773
+          ]
+        },
+        {
+          "element": "F",
+          "frac": [
+            0.244716,
+            0.757119,
+            0.754227
+          ]
+        },
+        {
+          "element": "F",
+          "frac": [
+            0.754577,
+            0.24447,
+            0.756774
+          ]
+        },
+        {
+          "element": "F",
+          "frac": [
+            0.243195,
+            0.245452,
+            0.756265
+          ]
+        },
+        {
+          "element": "F",
+          "frac": [
+            0.756805,
+            0.754548,
+            0.243735
+          ]
+        }
+      ]
+    },
+    "split": "import",
+    "prediction": null,
+    "prediction_status": "Geometry validated. Stability unavailable: no compatible cached relaxed prediction and DFT reference hull. Use the Python adapter for a documented reference workflow."
+  },
+  "matched": false
+}
