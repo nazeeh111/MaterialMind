@@ -1,0 +1,39 @@
+{
+  "results": [
+    {
+      "id": "wbm-5-6788",
+      "e_above_hull": -1.951794,
+      "stable": true,
+      "source": "previously computed WBM DFT"
+    }
+  ],
+  "history": [
+    {
+      "id": "wbm-5-6788",
+      "e_above_hull": -1.951794,
+      "stable": true,
+      "source": "previously computed WBM DFT",
+      "step": 1,
+      "cost": 1.0,
+      "timestamp_unix": 1794918074.469126,
+      "model_revision_at_selection": 0,
+      "prediction_at_selection": {
+        "predicted_hull": -2.198549726666667,
+        "uncertainty": 0.055624396577821665,
+        "interval_low": -2.284320417627142,
+        "interval_high": -2.1127790357061924,
+        "stable_probability": 0.9990757855822551,
+        "acquisition": 1.2908064353150606,
+        "novelty": 1.4586532486640273,
+        "relative_cost": 1.0,
+        "acquisition_weights": {
+          "exploration": 0.0,
+          "diversity": 0.2,
+          "cost_exponent": 0.5
+        }
+      }
+    }
+  ],
+  "model_updated": true,
+  "model_revision": 1
+}
