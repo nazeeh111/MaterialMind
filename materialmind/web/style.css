@@ -131,3 +131,73 @@ dialog{color:#183b35}dialog p,dialog .file-label,dialog label{font-size:13px;col
 }
 /* The 400-unit plot is about 268 CSS pixels wide on a 320-pixel page. */
 @media(max-width:380px){.discovery-chart svg text{font-size:18px}}
+
+/* Keep the mineral palette; make the evidence readable at every viewport. */
+.eyebrow, .badge, .section-no, .status-pill, .table-heading, .library-footer,
+.candidate-info, .candidate-prob, .workspace-meta small, .metric-label,
+.stability-estimate > div > span, .stability-estimate p, .energy-axis > span,
+.probability-row, .decision-note .eyebrow, .score-grid span, .evidence-note p,
+.text-link, .chart-heading p, .chart-legend, .budget-control label,
+.budget-summary, .small-note, .log-summary span, .history-row p,
+.history-energy small, .log-footnote, .method-strip .eyebrow, footer,
+footer > span:first-child, footer b, .empty p, .file-label, .file-label input {
+  font-size: 12px; letter-spacing: normal; color: #52634c;
+}
+.heading p, .decision-note p, .method-strip p, .method-strip h3,
+.empty, .empty strong, dialog p, .import-error, .reveal-result {
+  font-size: 14px; color: #43583c; line-height: 1.6;
+}
+.search-wrap input, .select-wrap select, .mode-switch button,
+.chart-heading h3, .button, .analysis-panel > .button {
+  font-size: 12px;
+}
+.search-wrap input::placeholder { color: #62735d; }
+.mode-switch button { color: #52634c; }
+.mode-switch button[aria-pressed=true] { color: #35592e; }
+.viewer-heading .eyebrow, .viewer-heading .mono, .viewer-heading .badge,
+.viewer-hint, .axis-label > span:last-child, .element-item,
+.structure-metadata span, .structure-metadata .button {
+  font-size: 12px; color: #b5cebf; letter-spacing: normal;
+}
+.viewer-bottom { flex-wrap: wrap; }
+.structure-metadata { height: auto; min-height: 76px; flex-wrap: wrap; padding-block: 12px; }
+.structure-metadata strong { font-size: 12px; }
+.structure-panel .badge { background: #19332f; }
+.viewer-top-tools .icon-button { color: #bdd7c9; }
+button:focus-visible, a:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline-color: #36653f;
+}
+.topbar :focus-visible, .structure-panel :focus-visible { outline-color: #b5edc7; }
+.candidate:focus-visible { outline-offset: -4px; }
+.discovery-chart svg text { fill: #52634c; font-size: 12px; }
+.chart-heading { flex-wrap: wrap; }
+.log-summary span { white-space: normal; }
+.log-footnote { line-height: 1.6; }
+.topbar .brand small { color: #b5cebf; }
+@media (max-width:720px){
+ .heading .eyebrow,.workspace-meta small,.chart-legend {font-size:12px}
+ .log-summary{flex-wrap:wrap}.file-label input{max-width:100%}
+ .search-wrap{flex-shrink:0;min-height:35px}
+ .log-panel .history{height:auto;min-height:240px;max-height:360px}
+}
+@media (max-width:380px){.discovery-chart svg text{font-size:18px}}
+@media(max-width:720px){.viewer-bottom{bottom:120px}.axis-label{bottom:172px}}
+
+.replay-origin:not([hidden]){font-size:12px;line-height:1.35;color:#d1ebd4;max-width:22rem}
+
+.batch-open{margin:12px 16px 16px;width:calc(100% - 32px)}
+.batch-controls{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:20px 0}
+.batch-controls label{display:flex;align-items:center;gap:12px}.batch-controls select{padding:8px;font:inherit}
+.batch-list{list-style:none;padding:0;max-height:40vh;overflow:auto;counter-reset:batch}
+.batch-list li{counter-increment:batch;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;border-top:1px solid #dde4d5;padding:12px 0}
+.batch-list li::before{content:counter(batch,decimal-leading-zero);font:12px monospace;color:#52634c}
+.batch-list strong{font-size:18px}.batch-list small{display:block;overflow-wrap:anywhere;line-height:1.7;color:#52634c}
+#batch-dialog{width:min(620px,calc(100vw - 32px))}#batch-dialog p{line-height:1.6}#batch-dialog .primary{width:100%}
+@media(max-width:720px){.batch-controls select{font-size:16px}.batch-list small{font-size:14px}}
+#batch-dialog[open]{display:flex;flex-direction:column;max-height:calc(100dvh - 32px);overflow:auto}
+#batch-dialog>.dialog-heading,#batch-dialog>p,#batch-dialog>.batch-controls,#batch-dialog>.primary{flex-shrink:0}
+#batch-dialog>.batch-list{flex:1 1 auto;min-height:80px;margin-block:0}
+
+#batch-dialog .button{font-size:14px}#batch-close{min-width:44px;min-height:44px}
+@media(max-width:720px){#batch-dialog p,#batch-dialog label{font-size:16px}#batch-dialog .small-note{padding:10px 0}}

@@ -43,7 +43,7 @@ function ui({preReady=true,deferBenchmark=false}={}) {
   const context = vm.createContext({
     document: doc,
     CrystalViewer: class {setStructure() {}}, elementColor: () => '#fff',
-    ResizeObserver: class {observe() {}}, TextEncoder, URL, Blob, console, setTimeout, confirm: () => true,
+    ResizeObserver: class {observe() {}}, TextEncoder, TextDecoder, URL, Blob, console, setTimeout, confirm: () => true,
     fetch: (path, options = {}) => {
       if (path === '/api/benchmark' && !deferBenchmark) return Promise.resolve(response({curves: []}));
       let resolve, reject;
@@ -429,4 +429,74 @@ test('reveal refresh retains focus on newer selected candidate', async () => {
   b.focus();b.handlers.click();u.pending[2].resolve(response(catalog(1,[revealed[0]])));await done;
   assert.equal(vm.runInContext('state.selected.id',u.context),'b');
   assert.equal(u.context.document.activeElement.getAttribute('data-candidate-id'),'b');
+});
+
+
+test('replay submits unchanged selected file bytes despite textarea newline normalization', async () => {
+  const u=ui();u.pending[0].resolve(response(catalog(0)));await settle();
+  const input=u.get('restore-input');let value='';
+  Object.defineProperty(input,'value',{get:()=>value,set:next=>{value=String(next).replace(/\r\n?/g,'\n');}});
+  const raw=new TextEncoder().encode('\uFEFF{\r\n  "schema_version":3\r\n}');
+  const file={size:raw.length,name:'original.json',arrayBuffer:async()=>raw.buffer};
+  const picker=u.get('restore-file');picker.files=[file];
+  await picker.handlers.change({target:picker});
+  assert.ok(input.value.includes('\n')&&!input.value.includes('\r'));
+  u.get('restore-confirm').checked=true;
+  const done=u.get('restore-form').handlers.submit({preventDefault(){},submitter:{id:'replay-submit'}});
+  assert.deepEqual(Buffer.from(u.pending[1].options.body),Buffer.from(raw));
+  u.pending[1].resolve(response(catalog(0)));await done;
+});
+
+test('editing a selected file submits the edited input rather than its original bytes', async () => {
+  const u=ui();u.pending[0].resolve(response(catalog(0)));await settle();
+  const raw=new TextEncoder().encode('{"schema_version":2}');
+  const file={size:raw.length,name:'old.json',arrayBuffer:async()=>raw.buffer};
+  const picker=u.get('restore-file');picker.files=[file];await picker.handlers.change({target:picker});
+  const edited='{"schema_version":3}';u.get('restore-input').value=edited;
+  u.get('restore-input').handlers.input();u.get('restore-confirm').checked=true;
+  const done=u.get('restore-form').handlers.submit({preventDefault(){},submitter:{id:'replay-submit'}});
+  assert.equal(u.pending[1].options.body,edited);
+  u.pending[1].resolve(response(catalog(0)));await done;
+});
+
+test('confirmed reset clears replay origin even if subsequent catalog refresh fails', async () => {
+  const u=ui();const initial=catalog(1,revealed.slice(0,1));
+  initial.metadata.replay_origin={kind:'replayed_as_new'};
+  u.pending[0].resolve(response(initial));await settle();
+  assert.equal(u.get('replay-origin').hidden,false);
+  const done=u.get('reset-session').handlers.click();
+  u.pending[1].resolve(response({reset:true}));await settle();
+  assert.equal(u.get('replay-origin').hidden,true);
+  u.pending[2].reject(new Error('catalog unavailable'));await done;
+  assert.equal(u.get('replay-origin').hidden,true);
+  assert.match(u.get('session-status').textContent,/stale/);
+});
+
+const batchPreview=()=>({requested_count:3,snapshot:'a'.repeat(64),model_revision:0,recommendations:['a','b','c'].map((id,i)=>({id,formula:'NaCl',batch_position:i+1,stable_probability:.5,acquisition:.2,novelty:.3,relative_cost:1}))});
+async function readyBatch(){const u=ui();u.pending[0].resolve(response(catalog(0)));await settle();u.get('batch-count').value='3';u.get('batch-open').handlers.click();return u;}
+test('cancelled batch preview suppresses late response and permits a new preview',async()=>{
+ const u=await readyBatch();const first=u.get('batch-preview').handlers.click();
+ assert.equal(u.pending[1].path,'/api/recommendations?count=3');
+ await u.get('batch-preview').handlers.click();assert.equal(u.pending.length,2);
+ u.get('batch-close').handlers.click();u.pending[1].resolve(response(batchPreview()));await first;
+ assert.equal(u.get('batch-list').children.length,0);assert.equal(u.get('batch-reveal').disabled,true);
+ u.get('batch-open').handlers.click();const second=u.get('batch-preview').handlers.click();u.pending[2].resolve(response(batchPreview()));await second;
+ assert.equal(u.get('batch-list').children.length,3);assert.equal(u.get('batch-reveal').disabled,false);
+});
+test('batch commit submits only snapshot/count once and recovers an uncertain outcome',async()=>{
+ const u=await readyBatch();const preview=u.get('batch-preview').handlers.click();u.pending[1].resolve(response(batchPreview()));await preview;
+ u.get('batch-reveal').handlers.click();assert.equal(u.pending[2].path,'/api/recommendations/reveal');
+ assert.deepEqual(JSON.parse(u.pending[2].options.body),{snapshot:'a'.repeat(64),count:3});
+ u.get('batch-reveal').handlers.click();assert.equal(u.pending.length,3);
+ assert.equal(u.get('reset-session').disabled,true);assert.equal(u.get('batch-close').disabled,true);
+ u.pending[2].reject(new Error('response lost'));await settle();
+ assert.equal(u.get('batch-dialog').open,false);assert.equal(u.get('export-session').disabled,true);
+ assert.equal(u.get('catalog-retry').hidden,false);
+ u.get('catalog-retry').handlers.click();u.pending[3].resolve(response(catalog(1,revealed)));await settle();
+ assert.equal(u.state().history.length,3);assert.equal(u.get('export-session').disabled,false);
+});
+test('batch read failure is retryable without making the session stale',async()=>{
+ const u=await readyBatch();const request=u.get('batch-preview').handlers.click();u.pending[1].reject(new Error('offline'));await request;
+ assert.match(u.get('batch-error').textContent,/No|Cannot/);assert.equal(u.get('export-session').disabled,false);
+ assert.equal(u.get('batch-reveal').disabled,true);assert.equal(u.get('batch-preview').disabled,false);
 });

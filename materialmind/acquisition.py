@@ -140,3 +140,46 @@ def gaussian_ei(model: StabilityModel, records: list[dict], known: list[dict],
     if not np.isfinite(scores).all():
         raise ValueError("Non-finite GP log expected improvement")
     return scores
+
+
+def recommend_batch(model: StabilityModel, records: list[dict], observed_records: list[dict],
+                    count: int = 5, policy: dict | AcquisitionWeights | None = None) -> list[dict]:
+    """Fix a label-blind batch, updating novelty after each chosen location.
+
+    The fitted surrogate and calibration stay fixed throughout selection, as in
+    the retrospective batch protocol. This function cannot reveal labels or fit.
+    Score ties use candidate ID, matching rank_candidates.
+    """
+    if type(count) is not int or not 1 <= count <= 20:
+        raise ValueError('Batch count must be an integer from 1 to 20')
+    ids = [r['id'] for r in records]
+    if len(set(ids)) != len(ids) or set(ids) & {r['id'] for r in observed_records}:
+        raise ValueError('Batch candidates must be unique and not already observed')
+    if not records:
+        return []
+    weights = AcquisitionWeights(**policy.get('weights', policy)) if isinstance(policy, dict) else policy or AcquisitionWeights()
+    # Cache only predictions and input locations. Candidate labels never enter.
+    ranked = rank_candidates(model, records, observed_records, weights)
+    by_id = {r['id']: r for r in records}
+    latent = np.clip(model.latent([by_id[r['id']] for r in ranked]), -10, 10)
+    selected = []
+    available = np.ones(len(ranked), dtype=bool)
+    novelty_values = np.array([r['novelty'] for r in ranked])
+    for position in range(min(count, len(ranked))):
+        indices = np.flatnonzero(available)
+        scores = combine_acquisition(
+            np.array([ranked[i]['stable_probability'] for i in indices]),
+            np.array([(ranked[i]['interval_high'] - ranked[i]['interval_low']) / 2 for i in indices]),
+            novelty_values[indices], np.array([ranked[i]['relative_cost'] for i in indices]), weights)
+        local = min(range(len(indices)), key=lambda j: (-scores[j], ranked[indices[j]]['id']))
+        best = int(indices[local])
+        selected.append({**ranked[best], 'acquisition': float(scores[local]),
+                         'novelty': float(novelty_values[best]), 'batch_position': position + 1,
+                         'reason': 'Label-blind sequential batch; novelty includes earlier chosen locations, without refitting or revealing their labels.'})
+        available[best] = False
+        distances = np.linalg.norm(latent - latent[best], axis=1) / np.sqrt(latent.shape[1])
+        distances = np.clip(distances, 0, 2)
+        # Empty-reference novelty is an initial convention, not a distance cap.
+        novelty_values = (distances if position == 0 and not observed_records
+                          else np.minimum(novelty_values, distances))
+    return selected

@@ -19,6 +19,9 @@ def main():
     rank = sub.add_parser("rank", help="Rank the held-out catalog without revealing reference labels")
     rank.add_argument("--top", type=int, default=20)
     rank.add_argument("--out", type=Path)
+    suggest = sub.add_parser('suggest', help='Suggest a label-blind batch with within-batch diversity updates')
+    suggest.add_argument('--count', type=int, choices=range(1,21), default=5)
+    suggest.add_argument('--out', type=Path)
     report = sub.add_parser("report", help="Export a measured analysis report from the released study")
     report.add_argument("--out", type=Path)
     sub.add_parser("provenance", help="Print the dataset provenance and limitations")
@@ -39,20 +42,24 @@ def main():
         value = describe(parse_cif(args.cif.read_text()))
         value.pop("structure")
         print(json.dumps(value, indent=2))
-    elif args.command == "rank":
+    elif args.command in ("rank", "suggest"):
         from materialmind.server import ROOT, load_dataset
         from materialmind.learning import fit_model
-        from materialmind.acquisition import rank_candidates
+        from materialmind.acquisition import rank_candidates, recommend_batch
         payload, oracle = load_dataset()
         records = payload["candidates"]
         train = sorted([r for r in records if r["split"] == "train"], key=lambda r: r["id"])
         calibration = sorted([r for r in records if r["split"] == "calibration"], key=lambda r: r["id"])
         model = fit_model(train, calibration, oracle, seed=0)
         policy = json.loads((ROOT / "artifacts/policy.json").read_text())
-        ranked = rank_candidates(model, [r for r in records if r["split"] == "test"], train, policy)
+        pool = [r for r in records if r['split'] == 'test']
+        ranked = (recommend_batch(model, pool, train, args.count, policy) if args.command == 'suggest'
+                  else rank_candidates(model, pool, train, policy))
         fields = ("id", "formula", "predicted_hull", "interval_low", "interval_high",
                   "stable_probability", "acquisition", "relative_cost", "novelty")
-        result = [{k: row[k] for k in fields} for row in ranked[:max(0, args.top)]]
+        if args.command == 'suggest':
+            fields += ('stable_probability', 'batch_position', 'reason', 'acquisition_weights')
+        result = [{k: row[k] for k in fields} for row in (ranked if args.command == 'suggest' else ranked[:max(0, args.top)])]
         text = json.dumps(result, indent=2)
         if args.out:
             args.out.parent.mkdir(parents=True, exist_ok=True)

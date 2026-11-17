@@ -1,7 +1,7 @@
 import { CrystalViewer, elementColor } from './crystal.js?v=specimen-workbench-3';
 
 const $=id=>document.getElementById(id);
-const state={candidates:[],selected:null,history:[],metadata:{},benchmark:null,curves:[],axis:'count',pickerOpen:false,sessionReady:false,loadingCatalog:false,needsRefresh:false,revealing:false,resetting:false,importing:false,exporting:false,restoring:false};
+const state={candidates:[],selected:null,history:[],metadata:{},benchmark:null,curves:[],axis:'count',pickerOpen:false,sessionReady:false,loadingCatalog:false,needsRefresh:false,revealing:false,resetting:false,importing:false,exporting:false,restoring:false,batch:null,batchLoading:false};
 let catalogueGeneration=0;
 const mutationBusy=()=>state.revealing||state.resetting||state.importing||state.exporting||state.restoring;
 const sessionBusy=()=>!state.sessionReady||state.needsRefresh||mutationBusy();
@@ -27,11 +27,72 @@ function select(candidate,keepFocus=false){state.selected=candidate;const p=cand
   const weights=p.acquisition_weights;const fittedReason=weights?`Probability ${percent(p.p_stable)}. ${numeric(weights.exploration,0)>0?`Exploration weight ${format(weights.exploration,2)}; `:''}${numeric(weights.diversity,0)>0?`novelty weight ${format(weights.diversity,2)}; `:''}${numeric(weights.cost_exponent,0)>0?`relative-cost exponent ${format(weights.cost_exponent,2)}.`:'no cost penalty.'}${numeric(weights.exploration,0)===0?' No explicit exploration bonus.':''}${numeric(weights.diversity,0)===0?' No novelty bonus.':''}`:null;$('rationale').textContent=p.rationale||fittedReason||p.acquisition_note||(candidate.prediction_status&&probability===null?String(candidate.prediction_status):`${sentence} Inspect the saved method and reference replay before treating this ranking as evidence of discovery.`);
   $('element-legend').innerHTML=(candidate.elements||[]).map(e=>`<span class="element-item"><i style="--element:${elementColor(e)}"></i>${esc(e)}</span>`).join('');
   viewer.setStructure(candidate.structure);updateRevealState();renderList(keepFocus?candidate.id:null);}
-function updateRevealState(){const busy=sessionBusy();$('picker-toggle').disabled=!state.sessionReady||state.needsRefresh||state.restoring||state.resetting;$('picker-review').disabled=!state.selected||state.needsRefresh;$('import-submit').disabled=busy;$('restore-submit').disabled=busy;$('reset-session').disabled=busy;$('import-open').disabled=busy;$('restore-open').disabled=busy;$('export-session').disabled=busy||!state.candidates.length;const selected=state.selected,entry=state.history.find(x=>x.id===selected?.id);$('download-cif').disabled=busy||!selected;$('reveal-result').hidden=!entry;$('reveal').disabled=!selected||busy||selected.split==='imported'||Boolean(entry);$('reveal').innerHTML=state.revealing?'Revealing reference…':entry?'Reference already revealed ✓':selected?.split==='imported'?'No reference for imported structure':'Reveal DFT reference <span aria-hidden="true">→</span>';
+function updateRevealState(){const busy=sessionBusy();
+  $('batch-open').disabled=busy;$('batch-preview').disabled=busy||state.batchLoading;$('batch-count').disabled=busy||state.batchLoading;
+  $('batch-close').disabled=state.revealing;$('batch-reveal').disabled=busy||state.batchLoading||!state.batch?.recommendations?.length;
+$('picker-toggle').disabled=!state.sessionReady||state.needsRefresh||state.restoring||state.resetting;$('picker-review').disabled=!state.selected||state.needsRefresh;$('import-submit').disabled=busy;$('restore-submit').disabled=busy;$('replay-submit').disabled=busy;$('reset-session').disabled=busy;$('import-open').disabled=busy;$('restore-open').disabled=busy;$('export-session').disabled=busy||!state.candidates.length;const selected=state.selected,entry=state.history.find(x=>x.id===selected?.id);$('download-cif').disabled=busy||!selected;$('reveal-result').hidden=!entry;$('reveal').disabled=!selected||busy||selected.split==='imported'||Boolean(entry);$('reveal').innerHTML=state.revealing?'Revealing reference…':entry?'Reference already revealed ✓':selected?.split==='imported'?'No reference for imported structure':'Reveal DFT reference <span aria-hidden="true">→</span>';
   if(entry){const e=numeric(entry.e_above_hull??entry.reference??entry.energy);const stable=e===null?null:(entry.stable??(e<=0));$('reveal-result').className=`reveal-result${stable===false?' unstable':''}`;$('reveal-result').textContent=e===null?'The saved reference has no available energy value.':`Previously computed DFT: ${format(e)} eV / atom · ${stable?'stable against the reference hull':'above the reference hull'}.`}}
 function renderHistory(){catalogueCount();$('log-evaluations').textContent=state.history.length;$('log-stable').textContent=state.history.filter(h=>{const e=numeric(h.e_above_hull??h.reference??h.energy);return e!==null&&(h.stable??(e<=0));}).length;$('log-cost').textContent=format(state.history.reduce((sum,h)=>sum+numeric(h.cost??state.candidates.find(c=>c.id===h.id)?.prediction.relative_cost,1),0),1);if(!state.history.length){$('history').innerHTML='<div class="empty"><span class="empty-symbol">⌁</span><strong>Your next decision starts here.</strong><p>Inspect a candidate, then reveal its reference. Every choice stays in this session’s exportable research record.</p></div>';return;}$('history').innerHTML=state.history.map((h,i)=>{const c=state.candidates.find(c=>c.id===h.id),energy=numeric(h.e_above_hull??h.reference??h.energy),stable=energy===null?null:(h.stable??(energy<=0));return `<div class="history-row"><span class="history-index">${String(i+1).padStart(2,'0')}</span><div><h4>${formulaHTML(h.formula||c?.formula||h.id)}</h4><p>${esc(h.id)}</p></div><span class="history-energy${stable===false?' unstable':''}">${format(energy)}<small>${stable===null?'REFERENCE UNAVAILABLE':stable?'DFT STABLE':'ABOVE HULL'} · eV / atom</small></span></div>`;}).reverse().join('');}
-async function reveal(){if(!state.selected||sessionBusy())return;state.revealing=true;error('');updateRevealState();const selected=state.selected;let committed=false;try{const result=await api('/api/reveal',{method:'POST',body:JSON.stringify({ids:[selected.id]})});committed=true;catalogueGeneration++;const items=result.results||result.revealed||result.history||[result];items.forEach(h=>{if(!h.id)h.id=selected.id;if(!state.history.some(x=>x.id===h.id))state.history.push({...h,timestamp:new Date().toISOString(),prediction_at_selection:{...selected.prediction}});});if(Array.isArray(result.history))state.history=result.history;if(result.candidates){result.candidates.forEach(c=>{const i=state.candidates.findIndex(x=>x.id===c.id);if(i>=0)state.candidates[i]=normalize(c);});state.selected=state.candidates.find(c=>c.id===state.selected?.id)||state.selected;}if(result.model_updated){const refreshed=await api('/api/catalog');state.candidates=(refreshed.candidates||[]).map(normalize);state.metadata=refreshed.metadata||{};if(Array.isArray(refreshed.history))state.history=refreshed.history;select(state.candidates.find(c=>c.id===state.selected?.id)||state.selected||selected);$('dataset-subtitle').textContent='Selection model updated using revealed evidence';}renderHistory();renderList();updateRevealState();}catch(e){state.needsRefresh=true;renderHistory();renderList();$('catalog-retry').hidden=false;$('session-status').hidden=false;$('session-status').textContent='Candidate details are stale until the session is refreshed.';error(committed?`Reference revealed, but the updated catalog could not be loaded. ${e.message} Retry loading candidates to check the session.`:`Could not confirm the reveal. ${e.message} Retry loading candidates to check the session before continuing.`);}finally{state.revealing=false;updateRevealState();}}
+async function reveal(batch=null){
+  if(sessionBusy()||(!batch&&!state.selected))return;
+  const selected=state.selected;
+  state.revealing=true;error('');updateRevealState();let committed=false;
+  try{
+    const path=batch?'/api/recommendations/reveal':'/api/reveal';
+    const body=batch?{count:batch.requested_count,snapshot:batch.snapshot}:{ids:[selected.id]};
+    const result=await api(path,{method:'POST',body:JSON.stringify(body)});
+    committed=true;catalogueGeneration++;state.batch=null;
+    if(Array.isArray(result.history))state.history=result.history;
+    else for(const row of result.results||[])if(!state.history.some(entry=>entry.id===row.id))state.history.push(row);
+    if(result.model_updated||batch){
+      const refreshed=await api('/api/catalog');
+      state.candidates=(refreshed.candidates||[]).map(normalize);state.metadata=refreshed.metadata||{};
+      if(Array.isArray(refreshed.history))state.history=refreshed.history;
+      const candidate=state.candidates.find(c=>c.id===(state.selected?.id||selected?.id))||state.candidates[0];
+      if(candidate)select(candidate);
+    }
+    renderHistory();renderList();updateReplayOrigin();
+    if(batch){$('batch-dialog').close();$('session-status').hidden=false;$('session-status').textContent=`Revealed ${result.results.length} references together. The selection model was updated once.`;}
+  }catch(e){
+    state.batch=null;
+    requireCatalogRecovery(committed?'Reference revealed. Candidate details are stale until refreshed.':'Reveal outcome or session state needs checking. Refresh candidates before continuing.');
+    const message=committed?`Reference revealed, but the updated catalog could not be loaded. ${e.message}`:`Could not confirm the reveal. ${e.message}`;
+    if(batch){$('batch-dialog').close();$('batch-error').textContent=message;}
+    error(`${message} Retry loading candidates to check the session before continuing.`);
+  }finally{state.revealing=false;updateRevealState();}
+}
+let batchGeneration=0;
+function cancelBatch(){batchGeneration++;state.batchLoading=false;state.batch=null;updateRevealState();}
+$('batch-open').addEventListener('click',()=>{
+  if(sessionBusy())return;cancelBatch();$('batch-list').replaceChildren();$('batch-error').hidden=true;
+  $('batch-status').textContent='Choose a size, then preview the candidates.';$('batch-dialog').showModal();
+});
+$('batch-close').addEventListener('click',()=>{if(!state.revealing){cancelBatch();$('batch-dialog').close();}});
+$('batch-dialog').addEventListener('cancel',event=>{if(state.revealing)event.preventDefault();else cancelBatch();});
+$('batch-dialog').addEventListener('close',cancelBatch);
+$('batch-count').addEventListener('change',()=>{cancelBatch();$('batch-list').replaceChildren();$('batch-status').textContent='Size changed. Preview the new batch before revealing.';});
+$('batch-preview').addEventListener('click',async()=>{
+  if(sessionBusy()||state.batchLoading)return;
+  const generation=++batchGeneration,catalogGeneration=catalogueGeneration;
+  state.batchLoading=true;state.batch=null;$('batch-list').replaceChildren();$('batch-error').hidden=true;
+  $('batch-status').textContent='Selecting candidates without revealing references…';updateRevealState();
+  try{
+    const result=await api(`/api/recommendations?count=${encodeURIComponent($('batch-count').value)}`);
+    if(generation!==batchGeneration||catalogGeneration!==catalogueGeneration||mutationBusy()||state.needsRefresh)return;
+    state.batch=result;
+    for(const row of result.recommendations){
+      const item=document.createElement('li');item.innerHTML=`<div><strong>${formulaHTML(row.formula)}</strong><small>${esc(row.id)}</small><small>Model stability ${percent(row.stable_probability)} · score ${format(row.acquisition)} · novelty ${format(row.novelty,2)} · cost ${format(row.relative_cost,2)}×</small></div>`;
+      $('batch-list').append(item);
+    }
+    $('batch-status').textContent=result.recommendations.length?`${result.recommendations.length} candidates ready. Predictions stay fixed until the whole batch is revealed.`:'All held-out references have already been revealed.';
+  }catch(e){if(generation===batchGeneration){$('batch-error').textContent=`Cannot preview this batch. ${e.message} Try again.`;$('batch-error').hidden=false;$('batch-status').textContent='No references were revealed.';}}
+  finally{if(generation===batchGeneration){state.batchLoading=false;updateRevealState();}}
+});
+$('batch-reveal').addEventListener('click',()=>{if(state.batch&&!sessionBusy()&&!state.batchLoading)reveal(state.batch);});
 async function exportSession(){if(sessionBusy())return;const context={selected_id:state.selected?.id,inspected_budget:{axis:state.axis,budget:numeric($('budget').value)},filters:{search:$('search').value,partition:$('partition').value,sort:$('sort').value},benchmark:state.benchmark};state.exporting=true;updateRevealState();error('');try{const data=await api('/api/session');Object.assign(data,context);saveFile('materialmind-research-record.json',JSON.stringify(data,null,2));}catch(e){error(`Cannot export the research record. ${e.message}`);}finally{state.exporting=false;updateRevealState();}}
+function updateReplayOrigin(){ $('replay-origin').hidden=state.metadata?.replay_origin?.kind!=='replayed_as_new'; }
+let restoreSource = null;
+$('restore-input').addEventListener('input', () => { restoreSource = null; });
 function restoreError(message){$('restore-error').textContent=message;$('restore-error').hidden=!message;}
 $('restore-open').addEventListener('click',()=>{if(sessionBusy())return;$('restore-dialog').showModal();$('restore-file').focus();});
 $('restore-close').addEventListener('click',()=>{if(!state.restoring)$('restore-dialog').close();});
@@ -41,34 +102,38 @@ $('restore-file').addEventListener('change',async event=>{
   if(file.size>16777216){restoreError('Choose a JSON record no larger than 16 MiB. Your pasted input has been kept.');event.target.value='';return;}
   const previous=$('restore-input').value;
   try{
-    const text=await file.text();
+    const bytes=new Uint8Array(await file.arrayBuffer());
+    const text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
     if(file===event.target.files?.[0]&&!state.restoring){
       if($('restore-input').value!==previous)restoreError('Pasted JSON changed while the file was reading. Your edits were kept. Choose the file again to replace them.');
-      else{$('restore-input').value=text;$('restore-file-name').textContent=`Loaded ${file.name}. You can choose this file again to reload its original content.`;}
+      else{$('restore-input').value=text;restoreSource={bytes,text:$('restore-input').value};$('restore-file-name').textContent=`Loaded ${file.name}. You can choose this file again to reload its original content.`;}
       event.target.value='';
     }
   }catch{if(file===event.target.files?.[0])event.target.value='';restoreError('Cannot read that file. Choose it again or paste the JSON.');}
 });
 $('restore-form').addEventListener('submit',async event=>{
   event.preventDefault();if(sessionBusy()||!$('restore-confirm').checked)return;restoreError('');
+  const replay=event.submitter?.id==='replay-submit';
+  if(replay&&!confirm('Reuse the recorded choices and geometry with this installation? Predictions, labels and costs will be recalculated. This does not verify the original model.'))return;
   const text=$('restore-input').value;
+  const body=restoreSource?.text===text?restoreSource.bytes:text;
   if(new TextEncoder().encode(text).length>16777216){restoreError('The JSON record exceeds 16 MiB.');return;}
   try{JSON.parse(text);}catch{restoreError('Invalid JSON. Choose an original schema-3 export or correct the pasted input.');return;}
   const selectedId=state.selected?.id;state.restoring=true;updateRevealState();
-  for(const id of ['restore-submit','restore-close','restore-file','restore-input','restore-confirm'])$(id).disabled=true;
+  for(const id of ['restore-submit','replay-submit','restore-close','restore-file','restore-input','restore-confirm'])$(id).disabled=true;
   $('restore-progress').hidden=false;$('restore-submit').textContent='Rebuilding session…';
   try{
-    const result=await api('/api/session',{method:'POST',body:text});
+    const result=await api(replay?'/api/session/replay':'/api/session',{method:'POST',body});
     catalogueGeneration++;
     state.candidates=result.candidates.map(normalize);state.metadata=result.metadata;state.history=result.history;
     const candidate=state.candidates.find(c=>c.id===selectedId)||state.candidates[0];
     if(candidate)select(candidate);renderHistory();renderList();error('');
-    $('session-status').textContent=`Restored ${state.history.length} revealed references across ${state.metadata.model_revision} original model updates. Search and filters were kept.`;
+    restoreSource=null;updateReplayOrigin();$('session-status').textContent=replay?'Replayed with current model; original predictions unverified.':`Restored ${state.history.length} revealed references across ${state.metadata.model_revision} original model updates. Search and filters were kept.`;
     $('session-status').hidden=false;$('restore-dialog').close();$('restore-input').value='';$('restore-file').value='';$('restore-file-name').textContent='';$('restore-confirm').checked=false;
   }catch(err){if(!definitelyRejected(err)){requireCatalogRecovery('Restore outcome is unconfirmed. Candidate details may be stale until refreshed.');restoreError(`${err.message} Your input is kept. Close this dialog and retry loading candidates to check the session.`);}else restoreError(`${err.message} Your input is kept; correct it or choose another record.`);}
   finally{
     state.restoring=false;updateRevealState();$('restore-progress').hidden=true;$('restore-submit').textContent='Restore session';
-    for(const id of ['restore-close','restore-file','restore-input','restore-confirm'])$(id).disabled=false;updateRevealState();
+    for(const id of ['replay-submit','restore-close','restore-file','restore-input','restore-confirm'])$(id).disabled=false;updateRevealState();
   }
 });
 const METHOD_NAMES={materialmind:'MaterialMind',learned:'MaterialMind',learned_acquisition:'MaterialMind',calibrated:'MaterialMind',random:'Random',greedy:'Property greedy',property_greedy:'Adapted greedy',pretrained_greedy:'CHGNet greedy',uncertainty:'Uncertainty',diversity:'Diversity',bo:'GP expected improvement',bayesian_optimization:'GP expected improvement',gp_ei:'GP log-EI',uncalibrated:'Uncalibrated',no_diversity:'No diversity',no_cost:'No cost',no_online_update:'Frozen surrogate'};
@@ -100,7 +165,7 @@ async function load(){
     const result=await api('/api/catalog');
     if(generation===catalogueGeneration){
       $('catalog-retry').hidden=true;error('');const wasStale=state.needsRefresh;
-      state.candidates=(result.candidates||[]).map(normalize);state.metadata=result.metadata||{};state.sessionReady=true;state.needsRefresh=false;if(wasStale)$('session-status').hidden=true;
+      state.candidates=(result.candidates||[]).map(normalize);state.metadata=result.metadata||{};updateReplayOrigin();state.sessionReady=true;state.needsRefresh=false;if(wasStale)$('session-status').hidden=true;
       if(result.history)state.history=result.history;
       catalogueCount();renderHistory();
       const previousId=state.selected?.id;const sorted=[...state.candidates].sort((a,b)=>numeric(b.prediction.acquisition,-Infinity)-numeric(a.prediction.acquisition,-Infinity));
@@ -123,19 +188,19 @@ function setPickerOpen(open){
 }
 $('picker-toggle').addEventListener('click',()=>{if(!state.sessionReady||state.needsRefresh||state.restoring||state.resetting)return;setPickerOpen(!state.pickerOpen);});
 $('picker-review').addEventListener('click',()=>{if(!state.selected||state.needsRefresh)return;setPickerOpen(false);$('analysis-heading').focus();$('analysis-heading').scrollIntoView({block:'start'});});
-$('catalog-retry').addEventListener('click',()=>{if(!state.loadingCatalog&&!mutationBusy()){$('catalog-retry').hidden=true;$('candidate-list').innerHTML='<div class="empty loading">Loading structures…</div>';load();}});$('search').addEventListener('input',()=>renderList());$('partition').addEventListener('change',()=>renderList());$('sort').addEventListener('change',()=>renderList());$('reveal').addEventListener('click',reveal);$('export-session').addEventListener('click',exportSession);$('download-cif').addEventListener('click',()=>{if(state.selected&&!sessionBusy()){const a=document.createElement('a');a.href=`/api/cif/${encodeURIComponent(state.selected.id)}`;a.download=`${state.selected.id}.cif`;a.click();}});$('reset-view').addEventListener('click',()=>viewer.reset());$('toggle-cell').addEventListener('click',()=>{$('toggle-cell').setAttribute('aria-pressed',viewer.toggleCell());});$('toggle-bonds').addEventListener('click',()=>{$('toggle-bonds').setAttribute('aria-pressed',viewer.toggleBonds());});$('budget').addEventListener('input',renderChart);$('count-axis').addEventListener('click',()=>setAxis('count'));$('cost-axis').addEventListener('click',()=>setAxis('cost'));new ResizeObserver(()=>renderChart()).observe($('discovery-chart'));
+$('catalog-retry').addEventListener('click',()=>{if(!state.loadingCatalog&&!mutationBusy()){$('catalog-retry').hidden=true;$('candidate-list').innerHTML='<div class="empty loading">Loading structures…</div>';load();}});$('search').addEventListener('input',()=>renderList());$('partition').addEventListener('change',()=>renderList());$('sort').addEventListener('change',()=>renderList());$('reveal').addEventListener('click',()=>reveal());$('export-session').addEventListener('click',exportSession);$('download-cif').addEventListener('click',()=>{if(state.selected&&!sessionBusy()){const a=document.createElement('a');a.href=`/api/cif/${encodeURIComponent(state.selected.id)}`;a.download=`${state.selected.id}.cif`;a.click();}});$('reset-view').addEventListener('click',()=>viewer.reset());$('toggle-cell').addEventListener('click',()=>{$('toggle-cell').setAttribute('aria-pressed',viewer.toggleCell());});$('toggle-bonds').addEventListener('click',()=>{$('toggle-bonds').setAttribute('aria-pressed',viewer.toggleBonds());});$('budget').addEventListener('input',renderChart);$('count-axis').addEventListener('click',()=>setAxis('count'));$('cost-axis').addEventListener('click',()=>setAxis('cost'));new ResizeObserver(()=>renderChart()).observe($('discovery-chart'));
 $('reset-session').addEventListener('click',async()=>{
   if(sessionBusy())return;
   if(!confirm('Reset this session? Revealed references and imported structures will be removed. Export the record first if you want to restore it later.'))return;
   state.resetting=true;updateRevealState();let committed=false;
   try{
     await api('/api/reset',{method:'POST',body:'{}'});committed=true;catalogueGeneration++;
-    state.needsRefresh=true;state.history=[];renderHistory();renderList();updateRevealState();
+    state.needsRefresh=true;state.history=[];state.metadata={...state.metadata,replay_origin:null};updateReplayOrigin();renderHistory();renderList();updateRevealState();
     $('session-status').textContent='Session reset. Refreshing the candidate view…';$('session-status').hidden=false;
     const selectedId=state.selected?.id;const refreshed=await api('/api/catalog');
     state.candidates=(refreshed.candidates||[]).map(normalize);state.metadata=refreshed.metadata||{};state.history=refreshed.history||[];state.needsRefresh=false;
     const candidate=state.candidates.find(c=>c.id===selectedId)||filteredCandidates()[0]||state.candidates[0];
-    if(candidate)select(candidate);renderHistory();renderList();error('');$('session-status').hidden=true;
+    if(candidate)select(candidate);renderHistory();renderList();updateReplayOrigin();error('');$('session-status').hidden=true;
   }catch(e){
     if(committed){error(`Session reset, but the candidate view is out of date. ${e.message} Retry loading candidates before continuing.`);$('catalog-retry').hidden=false;$('session-status').textContent='Session reset. Candidate details below are stale until refreshed.';}
     else{state.needsRefresh=true;renderList();$('catalog-retry').hidden=false;$('session-status').hidden=false;$('session-status').textContent='Reset outcome is unconfirmed. Candidate details may be stale until refreshed.';error(`Could not confirm reset. ${e.message} Retry loading candidates to check the session before continuing.`);}

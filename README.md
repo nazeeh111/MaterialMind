@@ -46,7 +46,9 @@ The server is intended for local research and binds to loopback.
     record after a reset. Use **Restore record** to resume a schema-3 export, including
     the original reveal batches and rebuilt models. Session state lives in server memory;
     export before closing the server. Restore replaces only the current browser session
-    and requires a matching dataset, policy, code and scientific environment.
+    and requires a matching dataset, policy, code and scientific environment. To reuse
+    eligible older choices under the current model, explicitly choose **Replay as new**;
+    original predictions remain unverified and the new session records that origin.
 
 See [portable sessions](docs/SESSIONS.md) for the replay contract, API, limits and recovery.
 
@@ -202,3 +204,52 @@ See the [foundation review](docs/FOUNDATIONS.md) for methods, alternatives, and 
 Code: **MIT**. WBM and published benchmark data: **CC BY 4.0**. Three.js: **MIT**.
 Please cite MaterialMind using [`CITATION.cff`](CITATION.cff), and credit the original WBM,
 Matbench Discovery, and CHGNet papers listed in [data attribution](DATA_LICENSE.md).
+
+## Label-blind batch suggestions
+
+`materialmind suggest --count 5` returns an initial held-out batch using the
+released policy, with within-batch novelty updates. Unlike taking the top five
+rows of a static ranking, each subsequent choice accounts for the locations
+already chosen in that batch. The fitted model and calibration remain fixed
+throughout selection; no reference labels are revealed or synthetic labels fitted.
+Use `--out batch.json` to save the suggestions. This command starts from the
+initial training state and does not resume a browser session.
+
+For a running session, `GET /api/recommendations?count=5` uses its current model
+and excludes already revealed candidates. It returns ordered IDs, predictions and
+score components with the current `model_revision`, without changing session
+history. Review the suggestions, then `POST /api/reveal` with the chosen IDs
+together to reveal and refit once. A later session change can make suggestions
+stale; obtain a new recommendation after changing or restoring the session.
+Counts are limited to 1–20 and an exhausted pool returns fewer suggestions.
+The API is available through the local interactive docs at `/api/docs`.
+
+This exposes the existing batch acquisition idea as a practical workflow. It does
+not retune the released study, alter its artifacts, establish an improvement in
+discoveries or evaluate new physical structures.
+
+The browser's **Suggest a batch** action previews 1, 3, 5, 10 or 20 candidates
+without revealing references. Cancel a preview freely. **Reveal this batch**
+commits the whole current preview with one model refit. If another tab changes
+the session, the server refuses the stale preview; refresh and preview again.
+If a commit response is lost, refresh the session before taking another action.
+
+For agent clients, recommendations now include an opaque `snapshot` and
+`requested_count`. Send those two values to
+`POST /api/recommendations/reveal` as `{ "count": 5, "snapshot": "..." }`.
+The server recomputes the ordered batch from the unchanged session under its lock;
+client predictions and reference labels are never consumed. Snapshot checks cover
+same-revision restore/reset changes as well as ordinary reveals. This digest is a
+consistency guard, not authentication. A duplicate or stale commit returns 409.
+Sequential within-batch score semantics are retained in each replay batch's
+`selection_mode`, so export and strict restore reproduce the recorded evidence.
+
+### Audit public discovery summaries
+
+The audit-only command checks every strategy's reported count-budget and
+proxy-cost-budget discovery mean and 95% bootstrap interval against its saved
+reveal traces, using the original seed aggregation and bootstrap calculation.
+Malformed, non-finite or inconsistent headlines are refused before any artifact
+is rewritten. Keep the original study files when inspecting a modified copy.
+The candidate-data hash covers the candidate table. Training-only oracle labels
+that the saved traces never use can change without affecting this check.
