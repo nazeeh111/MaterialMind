@@ -1,7 +1,6 @@
 # MaterialMind
 
 <p align="center">
-  <a href="https://github.com/nazeeh111/MaterialMind/actions"><img alt="Research software checks" src="https://github.com/nazeeh111/MaterialMind/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Code: MIT" src="https://img.shields.io/badge/code-MIT-406b54"></a>
   <a href="DATA_LICENSE.md"><img alt="Data: CC BY 4.0" src="https://img.shields.io/badge/data-CC_BY_4.0-687b86"></a>
   <img alt="Evidence: retrospective DFT" src="https://img.shields.io/badge/evidence-retrospective_DFT-8c745b">
