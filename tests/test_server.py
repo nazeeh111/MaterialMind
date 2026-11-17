@@ -404,3 +404,154 @@ def test_session_capacity_never_evicts_existing_research(client):
     assert client.post("/api/reset").status_code == 503
     client.cookies.set("materialmind_session", cookie)
     assert client.get("/api/catalog").json() == before
+
+
+def _legacy_from_current(record):
+    result=deepcopy(record)
+    result['schema_version']=2
+    result.pop('replay');result.pop('replay_sha256')
+    return result
+
+
+def test_explicit_legacy_replay_recomputes_and_persists_origin(client):
+    import hashlib,json
+    structure=Structure(Lattice.cubic(4),['Si'],[[0,0,0]])
+    imported=client.post('/api/import',json={'cif':to_cif(structure)}).json()['candidate']
+    client.post('/api/reveal',json={'ids':['test-3','test-1','test-3']})
+    client.post('/api/reveal',json={'ids':['test-1']})
+    client.post('/api/reveal',json={'ids':['test-1','test-4']})
+    fresh=client.get('/api/catalog').json();legacy=_legacy_from_current(client.get('/api/session').json())
+    assert client.post('/api/reset').status_code==200
+    before=client.get('/api/catalog').json()
+    assert client.post('/api/session',json=legacy).status_code==422
+    assert client.get('/api/catalog').json()==before
+    for row in legacy['revealed_references']:
+        row['e_above_hull']=999;row['cost']=999;row['prediction_at_selection']={'forged':True}
+    for row in legacy['candidates']:row['prediction']={'forged':True}
+    raw=json.dumps(legacy,separators=(',',':')).encode()
+    response=client.post('/api/session/replay',content=raw,headers={'content-type':'application/json'})
+    assert response.status_code==200,response.text
+    replayed=response.json();assert replayed['candidates']==fresh['candidates']
+    assert replayed['history']==fresh['history']
+    origin=replayed['metadata']['replay_origin'];assert origin['kind']=='replayed_as_new' and origin['source_schema']==2
+    assert origin['source_sha256']==hashlib.sha256(raw).hexdigest() and origin['source_contract_fingerprint'] is None
+    assert any(r['id']==imported['id'] and r['structure']==imported['structure'] for r in replayed['candidates'])
+    exported=client.get('/api/session').json();assert [x['ids'] for x in exported['replay']['batches']]==[['test-3','test-1'],['test-4']]
+    assert client.post('/api/reset').status_code==200
+    assert client.post('/api/session',json=exported).status_code==200
+    assert client.post('/api/reveal',json={'ids':['test-5']}).status_code==200
+    assert client.get('/api/session').json()['replay']['origin']==origin
+
+
+def test_stale_current_replay_and_atomic_refusals(client,monkeypatch):
+    from materialmind.sessions import digest,SessionEngine
+    import materialmind.learning as learning
+    client.get('/api/catalog');client.post('/api/reveal',json={'ids':['test-0']})
+    record=client.get('/api/session').json();record['replay']['contract']['runtime']['python']='0.0.0';contract=record['replay']['contract'];contract['fingerprint']=digest({k:v for k,v in contract.items() if k!='fingerprint'});record['replay_sha256']=digest(record['replay'])
+    before=client.get('/api/catalog').json()
+    assert client.post('/api/session',json=record).status_code==409
+    assert client.get('/api/catalog').json()==before
+    assert client.post('/api/session/replay',json=record).status_code==200
+    replayed=client.get('/api/catalog').json();assert replayed['metadata']['replay_origin']['source_schema']==3
+    corrupt=deepcopy(record);corrupt['replay_sha256']='0'*64
+    assert client.post('/api/session/replay',json=corrupt).status_code==422
+    assert client.get('/api/catalog').json()==replayed
+    bad=deepcopy(record);bad['candidates'][0]['structure']['lattice'][0][0]+=1
+    assert client.post('/api/session/replay',json=bad).status_code==422
+    assert client.get('/api/catalog').json()==replayed
+    original_fit=learning.fit_model
+    def fail(*args,**kwargs):raise RuntimeError('synthetic failure')
+    monkeypatch.setattr(learning,'fit_model',fail)
+    assert client.post('/api/session/replay',json=record).status_code==503
+    monkeypatch.setattr(learning,'fit_model',original_fit)
+    assert client.get('/api/catalog').json()==replayed
+    original_catalog=SessionEngine.catalog
+    def fail_catalog(self,state):raise RuntimeError('synthetic catalog failure')
+    monkeypatch.setattr(SessionEngine,'catalog',fail_catalog)
+    assert client.post('/api/session/replay',json=record).status_code==503
+    monkeypatch.setattr(SessionEngine,'catalog',original_catalog)
+    assert client.get('/api/catalog').json()==replayed
+    assert client.post('/api/session/replay',json=record).status_code==200
+
+
+@pytest.mark.parametrize('kind',['gap','decrease','step','duplicate','missing','timestamp','import'])
+def test_legacy_malformed_replay_is_atomic(client,kind):
+    client.get('/api/catalog');client.post('/api/reveal',json={'ids':['test-0']});client.post('/api/reveal',json={'ids':['test-1']})
+    record=_legacy_from_current(client.get('/api/session').json());history=record['revealed_references']
+    if kind=='gap':history[1]['model_revision_at_selection']=3
+    if kind=='decrease':history[1]['model_revision_at_selection']=0
+    if kind=='step':history[1]['step']=3
+    if kind=='duplicate':history[1]['id']=history[0]['id']
+    if kind=='missing':history[1]['id']='not-in-catalog'
+    if kind=='timestamp':history[1]['timestamp_unix']=-1
+    if kind=='import':record['candidates'].append({'id':'import-aaaaaaaaaaaa','split':'import','structure':{'lattice':[],'sites':[]}})
+    before=client.get('/api/catalog').json();response=client.post('/api/session/replay',json=record)
+    assert response.status_code==422,(kind,response.text)
+    assert client.get('/api/catalog').json()==before
+
+
+def test_middle_refit_failure_keeps_prior_session_and_retry_succeeds(client,monkeypatch):
+    import materialmind.learning as learning
+    client.get('/api/catalog');client.post('/api/reveal',json={'ids':['test-0']});client.post('/api/reveal',json={'ids':['test-1']})
+    legacy=_legacy_from_current(client.get('/api/session').json());before=client.get('/api/catalog').json()
+    actual=learning.fit_model;count=0
+    def fail_second(*args,**kwargs):
+        nonlocal count
+        count+=1
+        if count==2:raise RuntimeError('middle replay refit failed')
+        return actual(*args,**kwargs)
+    monkeypatch.setattr(learning,'fit_model',fail_second)
+    assert client.post('/api/session/replay',json=legacy).status_code==503 and count==2
+    monkeypatch.setattr(learning,'fit_model',actual)
+    assert client.get('/api/catalog').json()==before
+    assert client.post('/api/session/replay',json=legacy).status_code==200
+
+
+def test_replay_body_limit_is_enforced(client):
+    from materialmind.sessions import MAX_SESSION_BYTES
+    before=client.get('/api/catalog').json()
+    response=client.post('/api/session/replay',content=b' '* (MAX_SESSION_BYTES+1),headers={'content-type':'application/json'})
+    assert response.status_code==413
+    assert client.get('/api/catalog').json()==before
+
+
+def test_replay_refuses_identifiable_legacy_import_with_missing_partition(client):
+    unknown=Structure(Lattice.cubic(4.0),["Si"],[[0,0,0]])
+    assert client.post('/api/import',json={'cif':to_cif(unknown)}).status_code==200
+    record=_legacy_from_current(client.get('/api/session').json())
+    imported=next(row for row in record['candidates'] if row['split']=='import')
+    del imported['split']
+    before=client.get('/api/catalog').json()
+    result=client.post('/api/session/replay',json=record)
+    assert result.status_code==422 and client.get('/api/catalog').json()==before
+
+
+@pytest.mark.parametrize('field',['empty','source','dependencies','runtime','seed'])
+def test_stale_replay_requires_complete_compatibility_identity(client,field):
+    from materialmind.sessions import digest
+    client.post('/api/reveal',json={'ids':['test-0']})
+    record=client.get('/api/session').json();contract=record['replay']['contract']
+    if field=='empty':contract.clear()
+    elif field=='source':contract['source_sha256']={}
+    elif field=='dependencies':contract['dependencies']={}
+    elif field=='runtime':contract['runtime']={}
+    elif field=='seed':contract['seed']=True
+    contract['fingerprint']=digest({key:value for key,value in contract.items() if key!='fingerprint'})
+    record['replay_sha256']=digest(record['replay'])
+    before=client.get('/api/catalog').json()
+    assert client.post('/api/session/replay',json=record).status_code==422
+    assert client.get('/api/catalog').json()==before
+
+
+def test_replay_preserves_selected_decisions_when_unselected_old_catalog_rows_are_absent(client):
+    client.post('/api/reveal',json={'ids':['test-0','test-2']})
+    current=client.get('/api/catalog').json()
+    record=_legacy_from_current(client.get('/api/session').json())
+    for number in range(40):
+        row=deepcopy(record['candidates'][0]);row['id']=f'old-unselected-{number}'
+        record['candidates'].append(row)
+    assert client.post('/api/reset').status_code==200
+    result=client.post('/api/session/replay',json=record)
+    assert result.status_code==200,result.text
+    assert result.json()['candidates']==current['candidates']
+    assert result.json()['history']==current['history']

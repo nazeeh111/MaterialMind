@@ -457,6 +457,30 @@ def audit_results(candidates: list[dict], labels: dict[str, float], outdir: str 
     expected_keys = set(itertools.product(METHODS, range(summary["n_seeds"])))
     if keys != expected_keys:
         raise ValueError("Method/seed coverage does not match protocol")
+    methods = summary.get("methods")
+    if not isinstance(methods, dict) or set(methods) != set(METHODS):
+        raise ValueError("Summary method coverage does not match protocol")
+    for method in METHODS:
+        group = sorted((episode for episode in episodes if episode["method"] == method),
+                       key=lambda episode: episode["seed"])
+        metrics = [episode_metrics(episode, test, labels, model, summary["budget"])
+                   for episode in group]
+        for field in ("stable_at_budget", "stable_at_cost_budget"):
+            saved = methods[method].get(field) if isinstance(methods[method], dict) else None
+            if (not isinstance(saved, dict) or not isinstance(saved.get("ci95"), list)
+                    or len(saved["ci95"]) != 2):
+                raise ValueError(f"Invalid summary metric: {method}.{field}")
+            values = [saved.get("mean"), *saved["ci95"]]
+            try:
+                finite = all(type(value) in (int, float) and np.isfinite(float(value)) for value in values)
+            except OverflowError:
+                finite = False
+            if not finite:
+                raise ValueError(f"Invalid summary metric: {method}.{field}")
+            values = [float(value) for value in values]
+            expected = bootstrap_mean_ci([row[field] for row in metrics])
+            if not np.allclose(values, [expected["mean"], *expected["ci95"]], rtol=0, atol=1e-12):
+                raise ValueError(f"Summary metric differs from reveal traces: {method}.{field}")
     # Check that GP ranking is informative after the shared seed0 initialization.
     initial_ids = shared_initials[0]
     initial_records = [by_id[i] for i in initial_ids]
@@ -478,7 +502,9 @@ def audit_results(candidates: list[dict], labels: dict[str, float], outdir: str 
              "methods": list(METHODS), "policy_sha256": policy_hash, "dataset_sha256": data_hash,
              "checks": ["complete method/seed matrix", "shared initialization", "unique in-partition evaluations",
                         "revealed labels match source", "cumulative budgets and discovery counts",
-                        "finite acquisition scores", "frozen no-online ablation", "model metrics match artifact"],
+                        "finite acquisition scores", "frozen no-online ablation",
+                        "count/cost means and bootstrap intervals match reveal traces",
+                        "model metrics match artifact"],
              "gp_first_batch": {"all_finite": bool(np.isfinite(gp_scores).all()),
                                 "n_candidates": len(gp_scores), "unique_scores": len(np.unique(gp_scores)),
                                 "minimum_log_ei": float(gp_scores.min()), "maximum_log_ei": float(gp_scores.max()),

@@ -1,6 +1,6 @@
 # One query, three different kinds of evidence
 
-This worked case uses current-main MaterialMind and existing public WBM data. It does not execute DFT, train CHGNet, collect a measurement or rerun the release study.
+This worked case uses the archived MaterialMind runtime included in the download and existing public WBM data. It does not execute DFT, train CHGNet, collect a measurement or rerun the release study.
 
 1. **Inspect and select.** The initial `PaMnF6` cell (`wbm-5-6788`, eight sites, space group `R-3`) ranks first among 641 held-out candidates. The pre-reveal model predicts **−2.1985497267 eV/atom**, with a 90% interval **[−2.2843204176, −2.1127790357]** and stability probability **0.9990757856**. Its acquisition score is `(P + 0.2 × novelty) / sqrt(relative_cost)` = **1.2908064353**. The released exploration coefficient is zero. Cost is a site-count proxy, not measured runtime.
 2. **Reveal an archived reference.** The already computed WBM DFT label is **−1.951794 eV/atom**. It is outside that interval, although both predicted and reference energies are below the fixed hull's zero threshold. A high stability probability does not establish an accurate energy interval. One chosen example does not estimate interval coverage or strategy advantage.
@@ -25,7 +25,7 @@ The desktop capture is **after the refit**. Its current mean is approximately �
 
 Use the repository's [normal setup](../../README.md#run-the-laboratory). Select `wbm-5-6788`, inspect the cell, reveal its reference, and choose **Export record**. In a fresh browser, choose **Restore record**, load the JSON and confirm replacement. Import `edited.cif` to inspect the geometry-only route. Matching `selected.cif` recovers the cached candidate.
 
-The native JSON has a conservative source/data/policy/runtime contract, not a signature. Its hash detects accidental changes, not authorship. The archived record needs the exact recorded versions, Python/platform identity and compatible numerical runtime. A different environment should generate and restore its own fresh record, not weaken the guard. See [portable sessions](../SESSIONS.md).
+The native JSON has a conservative source/data/policy/runtime contract, not a signature. Its hash detects accidental changes, not authorship. For exact restore of the archived record, use the runtime source and recorded environment in the worked bundle. The current workbench can create and restore its own records. Its **Replay as new** action can reconstruct eligible archived choices using the current model, with the older predictions left unverified. See [portable sessions](../SESSIONS.md).
 
 ## Scope and attribution
 

@@ -12,7 +12,7 @@
   <header class="topbar">
     <a href="/" class="brand" aria-label="MaterialMind Lab home"><img src="/assets/mark.svg" alt="" width="34" height="34"><span>Material<span class="brand-thin">Mind</span><small>LABORATORY</small></span></a>
     <nav aria-label="Main"><a href="#workspace" class="active">Observatory</a><a href="#evidence">Evidence</a><a href="#history-section">Experiment log</a></nav>
-    <div class="top-actions"><span class="local-indicator"><i></i> LOCAL SESSION</span><button class="button quiet" id="restore-open">Restore record</button><button class="button quiet" id="export-session">Export record <span aria-hidden="true">↗</span></button></div>
+    <div class="top-actions"><span id="replay-origin" class="replay-origin" role="status" hidden>Replayed with current model; original predictions unverified</span><span class="local-indicator"><i></i> LOCAL SESSION</span><button class="button quiet" id="restore-open">Restore record</button><button class="button quiet" id="export-session">Export record <span aria-hidden="true">↗</span></button></div>
   </header>
   <main id="workspace">
     <section class="heading">
@@ -32,6 +32,7 @@
         <div id="candidate-list" class="candidate-list" role="list" aria-label="Crystal candidates"><div class="empty loading">Loading structures…</div></div>
         <div class="library-footer"><span id="visible-count">—</span><span><i class="legend-dot selected"></i> selected</span></div>
         <button class="button picker-review" id="picker-review" type="button">Review selected crystal</button></div>
+        <button class="button batch-open" id="batch-open" type="button">Suggest a batch</button>
       </aside>
       <section class="structure-panel" aria-label="Three-dimensional crystal structure">
         <div class="viewer-heading"><div><span class="eyebrow">INITIAL CRYSTAL STRUCTURE</span><h2 id="selected-formula">Select a candidate</h2><span class="mono" id="selected-id">No structure loaded</span></div><span id="selected-split" class="badge muted">—</span></div>
@@ -58,11 +59,21 @@
     <section class="method-strip"><div><span class="eyebrow">EVIDENCE, WITH BOUNDARIES</span><h3>A laboratory for evaluating discovery strategies.</h3></div><p>Existing WBM crystal structures. Pretrained atomistic predictions. Adapted acquisition. Previously computed DFT references. This study makes no claim of synthesis or independent blind benchmark performance.</p><a class="text-link" href="https://github.com/nazeeh111/MaterialMind" target="_blank" rel="noopener">Methods & source ↗</a></section>
   </main>
   <footer><span>MaterialMind <b>Lab</b></span><span>Structure → prediction → selection → evidence</span><span>REPRODUCIBLE BY DESIGN</span></footer>
+  <dialog id="batch-dialog" aria-labelledby="batch-title" aria-describedby="batch-help">
+    <div class="dialog-heading"><div><span class="eyebrow">PLAN THE NEXT EVALUATIONS</span><h2 id="batch-title">Review a suggested batch</h2></div><button type="button" id="batch-close" class="icon-button" aria-label="Close batch preview">×</button></div>
+    <p id="batch-help">Choose candidates together. Suggestions account for earlier choices in this batch. Previewing reveals no references.</p>
+    <div class="batch-controls"><label for="batch-count">Batch size <select id="batch-count"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>20</option></select></label><button type="button" class="button" id="batch-preview">Preview batch</button></div>
+    <p id="batch-status" class="small-note" role="status">Choose a size, then preview the candidates.</p>
+    <ol id="batch-list" class="batch-list" tabindex="0" aria-label="Suggested candidates; scroll to review the complete batch"></ol>
+    <p id="batch-error" class="import-error" role="alert" hidden></p>
+    <button type="button" id="batch-reveal" class="button primary" disabled>Reveal this batch</button>
+    <p class="small-note">Reveals existing DFT results and refits once for the whole batch. No new calculations.</p>
+  </dialog>
   <dialog id="import-dialog" aria-labelledby="import-title"><form id="import-form"><div class="dialog-heading"><div><span class="eyebrow">BRING YOUR OWN STRUCTURE</span><h2 id="import-title">Import a crystal</h2></div><button type="button" class="icon-button" id="import-close" aria-label="Close import dialog">×</button></div><p>Paste a Crystallographic Information File (CIF). Chemistry and geometry are validated. Stability predictions are available only when the structure matches a cached candidate. New structures have no stability prediction or DFT reference in this retrospective dataset.</p><label for="cif-file" class="file-label">Choose a .cif file <input id="cif-file" type="file" accept=".cif,text/plain"></label><label class="sr-only" for="cif-input">CIF content</label><textarea id="cif-input" rows="12" placeholder="data_my_crystal&#10;_cell_length_a ..." required maxlength="1000000"></textarea><div id="import-error" role="alert" class="import-error" hidden></div><button class="button primary" type="submit" id="import-submit">Validate structure →</button></form></dialog>
   <dialog id="restore-dialog" aria-labelledby="restore-title" aria-describedby="restore-help">
     <form id="restore-form">
       <div class="dialog-heading"><h2 id="restore-title">Resume a research session</h2><button type="button" class="icon-button" id="restore-close" aria-label="Close restore dialog">×</button></div>
-      <p id="restore-help">Choose a schema-3 MaterialMind JSON export from the same dataset, policy, code and scientific environment (maximum 16 MiB). The engine rebuilds each original reveal batch. Uploaded labels and predictions are never trusted. Schema-2 records remain readable but cannot be restored.</p>
+      <p id="restore-help">Choose a schema-3 MaterialMind JSON export from the same dataset, policy, code and scientific environment (maximum 16 MiB). The engine rebuilds each original reveal batch. Uploaded labels and predictions are never trusted. Schema-2 records cannot be restored exactly; use Replay as new to recalculate their choices under the current model.</p>
       <label for="restore-file" class="file-label">Choose a .json record <input id="restore-file" type="file" accept=".json,application/json"></label>
       <p id="restore-file-name" role="status"></p>
       <label for="restore-input">Or paste the exported JSON</label>
@@ -70,7 +81,7 @@
       <label class="restore-confirm"><input id="restore-confirm" type="checkbox" required> Replace this browser session, including its reveals and imported structures. Export current work first if needed.</label>
       <p id="restore-progress" role="status" hidden>Rebuilding models in the original batch order. Keep this page open.</p>
       <div id="restore-error" role="alert" class="import-error" hidden></div>
-      <button class="button primary" type="submit" id="restore-submit">Restore session</button>
+      <button class="button primary" type="submit" id="restore-submit">Restore session</button> <button class="button quiet" type="submit" id="replay-submit">Replay as new</button>
     </form>
   </dialog>
   <script type="module" src="/assets/app.js?v=specimen-workbench-3"></script>
