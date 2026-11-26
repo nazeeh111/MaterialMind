@@ -12,7 +12,7 @@ The selected PaMnF₆ example ranks first but its archived energy falls outside 
 
 <picture><source media="(max-width: 600px)" srcset="docs/presentation/query-mobile.svg"><img src="docs/presentation/query.svg" alt="Actual PaMnF6 initial crystal and pre-reveal model interval beside the archived DFT energy, which lies outside the interval; both are below the fixed reference hull. The fitted query score is shown from recorded components." width="100%"></picture>
 
-[Follow the worked case](docs/presentation/README.md) · [Download its native records and runnable source](docs/presentation/worked-example.zip) · [Read the scientific report](docs/REPORT.md)
+[Follow the worked case](docs/presentation/README.md) · [Download its native records and runnable source](https://raw.githubusercontent.com/nazeeh111/MaterialMind/refs/heads/main/docs/presentation/worked-example.zip) · [Read the scientific report](docs/REPORT.md)
 
 This release uses **3,072 existing WBM structures**, with **641 candidates in the final chemical-system-held-out pool**. It performs retrospective prediction and label replay, not new DFT, synthesis or an official blind benchmark. The fitted policy **did not outperform adapted greedy** in the released study.
 
