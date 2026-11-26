@@ -211,6 +211,17 @@ test('missing reference energy is not displayed as stable', () => {
   assert.equal(u.get('log-stable').textContent, 0);
 });
 
+test('reference comparison uses the archived selection rather than the current model', () => {
+  const u = ui();
+  const record = JSON.parse(fs.readFileSync(new URL('../docs/presentation/reveal.json', import.meta.url), 'utf8')).history[0];
+  vm.runInContext(`state.history=[${JSON.stringify(record)}]; state.selected={id:'wbm-5-6788',split:'test',prediction:{lower:-2,upper:-1}}; updateRevealState()`, u.context);
+  const result = u.get('reveal-result').textContent;
+  assert.match(result, /WBM DFT: -1\.951794 eV\/atom/);
+  assert.match(result, /\[-2\.284320, -2\.112779\]/);
+  assert.match(result, /0\.160985 eV\/atom above the interval/);
+  assert.match(result, /Stable by the fixed hull criterion/);
+});
+
 test('committed reveal with failed catalog refresh says what succeeded', async () => {
   const u = ui();
   u.pending[0].resolve(response(catalog(0))); await settle();

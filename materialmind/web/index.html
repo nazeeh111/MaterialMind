@@ -4,7 +4,7 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#121b20"><meta name="description" content="MaterialMind Lab: a reproducible retrospective materials-discovery laboratory.">
   <title>MaterialMind Lab · Crystal discovery, examined</title>
-  <link rel="icon" href="/assets/mark.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/style.css?v=specimen-workbench-5">
+  <link rel="icon" href="/assets/mark.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/style.css?v=reference-comparison-1">
   <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.js"}}</script>
 </head>
 <body>
@@ -16,7 +16,7 @@
   </header>
   <main id="workspace">
     <section class="heading">
-      <div><div class="eyebrow"><span class="tiny-square"></span> CRYSTAL STABILITY / RETROSPECTIVE DISCOVERY</div><h1>Crystal stability</h1><p>Compare model predictions with previously computed density-functional theory (DFT) results.</p></div>
+      <div><div class="eyebrow"><span class="tiny-square"></span> CRYSTAL STABILITY / RETROSPECTIVE DISCOVERY</div><h1>Crystal stability</h1><p>Compare predicted crystal energies with archived density-functional theory (DFT) results.</p></div>
       <div class="workspace-meta"><span class="badge">WBM · BOUNDED STUDY</span><div><span id="candidate-count">—</span> candidates <span class="meta-separator">/</span> <span id="evaluated-count">0</span> revealed</div><small id="dataset-subtitle" class="sr-only" role="status">Connecting to the local research engine</small></div>
     </section>
     <div id="global-error" class="error-banner" role="alert" hidden></div><button id="catalog-retry" class="button retry" type="button" hidden>Retry loading candidates</button>
@@ -34,6 +34,18 @@
         <button class="button picker-review" id="picker-review" type="button">Review selected crystal</button></div>
         <button class="button batch-open" id="batch-open" type="button">Suggest a batch</button>
       </aside>
+      <aside class="analysis-panel">
+        <div class="panel-heading"><div><span class="section-no">02</span><h2 id="analysis-heading" tabindex="-1">Stability outlook</h2><p id="analysis-selection" class="analysis-selection">No crystal selected</p></div><span class="status-pill">MODEL</span></div>
+        <div class="stability-estimate"><span class="metric-label">Predicted distance to the fixed DFT reference hull</span><p class="model-context">Current model · may change after a reveal</p><div><strong id="energy-value">—</strong><span>eV / atom</span></div><p id="interval-text">Calibrated prediction interval</p></div>
+        <div class="energy-axis" id="energy-axis" role="img" aria-label="Signed distance from the DFT reference hull"><div class="axis-line"></div><div class="zero-line"></div><div id="energy-range" class="energy-range"></div><div id="energy-point" class="energy-point"></div><span class="axis-start" id="energy-min">−0.20</span><span class="axis-zero" id="energy-zero">0</span><span class="axis-end" id="energy-max">+0.20</span></div>
+        <div class="reference-action">
+          <button class="button primary" id="reveal" aria-describedby="reference-help">Reveal DFT reference <span aria-hidden="true">→</span></button>
+          <p id="reference-help">Shows an existing WBM calculation. A reveal updates the current model.</p>
+          <div id="reveal-result" class="reveal-result" tabindex="-1" aria-live="polite" hidden></div>
+        </div>
+        <div class="probability-row"><span>Model probability of stability</span><strong id="p-stable">—</strong></div><div class="probability-track"><div id="probability-fill"></div></div>
+        <div class="decision-note"><span class="eyebrow">WHY THIS CANDIDATE?</span><p id="rationale">Choose a candidate to inspect its selection evidence.</p><div class="score-grid"><div><span>Selection score</span><strong id="acquisition">—</strong></div><div><span>Relative proxy cost</span><strong id="cost">—</strong></div><div><span>Novelty</span><strong id="novelty">—</strong></div></div></div>
+      </aside>
       <section class="structure-panel" aria-label="Three-dimensional crystal structure">
         <div class="viewer-heading"><div><span class="eyebrow">INITIAL CRYSTAL STRUCTURE</span><h2 id="selected-formula">Select a candidate</h2><span class="mono" id="selected-id">No structure loaded</span></div><span id="selected-split" class="badge muted">—</span></div>
         <div id="crystal-canvas" class="crystal-canvas" tabindex="0" role="img" aria-label="Interactive crystal. Drag to orbit, scroll to zoom. Arrow keys rotate and plus or minus zoom."><div class="viewer-fallback" id="viewer-fallback" hidden>3D rendering is unavailable. Crystal coordinates and CIF export remain available.</div></div>
@@ -42,15 +54,6 @@
         <div class="viewer-bottom"><div id="element-legend" class="element-legend"></div><span class="viewer-hint">DRAG TO ORBIT · SCROLL TO ZOOM</span></div>
         <div class="structure-metadata"><div><span>Space group</span><strong id="space-group">—</strong></div><div><span>Sites / cell</span><strong id="sites">—</strong></div><div><span>Volume</span><strong id="volume">—</strong></div><button class="button quiet" id="download-cif">CIF <span aria-hidden="true">↓</span></button></div>
       </section>
-      <aside class="analysis-panel">
-        <div class="panel-heading"><div><span class="section-no">02</span><h2 id="analysis-heading" tabindex="-1">Stability outlook</h2><p id="analysis-selection" class="analysis-selection">No crystal selected</p></div><span class="status-pill">MODEL</span></div>
-        <div class="stability-estimate"><span class="metric-label">Predicted distance to DFT hull</span><p class="model-context">Current model · may change after a reveal</p><div><strong id="energy-value">—</strong><span>eV / atom</span></div><p id="interval-text">Calibrated prediction interval</p></div>
-        <div class="energy-axis" id="energy-axis" role="img" aria-label="Signed distance from the DFT reference hull"><div class="axis-line"></div><div class="zero-line"></div><div id="energy-range" class="energy-range"></div><div id="energy-point" class="energy-point"></div><span class="axis-start" id="energy-min">−0.20</span><span class="axis-zero" id="energy-zero">0</span><span class="axis-end" id="energy-max">+0.20</span></div>
-        <div class="probability-row"><span>Model probability of stability</span><strong id="p-stable">—</strong></div><div class="probability-track"><div id="probability-fill"></div></div>
-        <div class="decision-note"><span class="eyebrow">WHY THIS CANDIDATE?</span><p id="rationale">Choose a candidate to inspect its selection evidence.</p><div class="score-grid"><div><span>Selection score</span><strong id="acquisition">—</strong></div><div><span>Relative proxy cost</span><strong id="cost">—</strong></div><div><span>Novelty</span><strong id="novelty">—</strong></div></div></div>
-        <div class="evidence-note"><span class="evidence-icon">i</span><p>The interval and probability are model estimates. Revealing shows an existing DFT result; it does not run a new calculation.</p></div>
-        <button class="button primary" id="reveal">Reveal DFT reference <span aria-hidden="true">→</span></button><div id="reveal-result" class="reveal-result" aria-live="polite" hidden></div>
-      </aside>
     </section>
     <section class="lower-grid" id="evidence">
       <div class="panel evidence-panel"><div class="panel-heading"><div><span class="section-no">03</span><h2>Discovery efficiency</h2></div><div class="report-links"><a href="/api/report" download="materialmind-analysis.md" class="text-link">Analysis report ↗</a><a href="/api/benchmark" download="materialmind-benchmark.json" class="text-link">Data ↗</a></div></div><div class="chart-heading"><div><h3>How many stable candidates did each strategy find?</h3><p id="benchmark-context">Measured retrospective outcomes. Identical evaluation budgets.</p></div><div class="chart-options"><span class="badge muted" id="seed-badge">MULTIPLE SEEDS</span><div class="mode-switch" aria-label="Budget type"><button id="count-axis" aria-pressed="true">Evaluations</button><button id="cost-axis" aria-pressed="false">Proxy cost</button></div></div></div><div id="discovery-chart" class="discovery-chart"><div class="empty">Benchmark results are loading.</div></div><div id="chart-legend" class="chart-legend"></div><div class="budget-control"><label for="budget"><span id="budget-kind">Inspect evaluation budget</span><strong id="budget-label">20</strong></label><input type="range" id="budget" min="1" max="100" value="20"><div id="budget-summary" class="budget-summary"></div></div><p class="small-note" id="benchmark-note">Curves come from saved experiment outputs. A replay does not perform a new physical calculation.</p></div>
@@ -84,6 +87,6 @@
       <button class="button primary" type="submit" id="restore-submit">Restore session</button> <button class="button quiet" type="submit" id="replay-submit">Replay as new</button>
     </form>
   </dialog>
-  <script type="module" src="/assets/app.js?v=specimen-workbench-3"></script>
+  <script type="module" src="/assets/app.js?v=reference-comparison-1"></script>
 </body>
 </html>
