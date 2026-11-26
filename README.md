@@ -1,18 +1,10 @@
 # MaterialMind
 
-<p align="center">
-  <a href="LICENSE"><img alt="Code: MIT" src="https://img.shields.io/badge/code-MIT-406b54"></a>
-  <a href="DATA_LICENSE.md"><img alt="Data: CC BY 4.0" src="https://img.shields.io/badge/data-CC_BY_4.0-687b86"></a>
-  <img alt="Evidence: retrospective DFT" src="https://img.shields.io/badge/evidence-retrospective_DFT-8c745b">
-</p>
+**The interval missed. The stability classification held.** The model gave PaMnF₆ (`wbm-5-6788`) a 90% prediction interval of **−2.284 to −2.113 eV/atom**. The archived WBM DFT reference was **−1.952 eV/atom**, about **0.161 eV/atom above** the interval. Both the prediction and the computed reference fall below the fixed reference-hull threshold of **0 eV/atom**.
 
-**Choose a crystal. Inspect the model. Reveal what it missed.** MaterialMind is a local research laboratory for comparing crystal-stability predictions and active-learning decisions against **existing computed DFT references**. Rotate real initial cells, inspect uncertainty and query costs, then export and restore the evidence behind a decision.
+[Reveal the reference in the local lab](#run-the-laboratory) · [Follow the worked case](docs/presentation/README.md) · [Download native records and runnable source](https://raw.githubusercontent.com/nazeeh111/MaterialMind/refs/heads/main/docs/presentation/worked-example.zip)
 
-The selected PaMnF₆ example ranks first but its archived energy falls outside the model's 90% interval. Both energies still satisfy the fixed reference-hull stability criterion. That distinction is the point: a plausible selection is not proof that its uncertainty is reliable.
-
-<picture><source media="(max-width: 600px)" srcset="docs/presentation/query-mobile.svg"><img src="docs/presentation/query.svg" alt="Actual PaMnF6 initial crystal and pre-reveal model interval beside the archived DFT energy, which lies outside the interval; both are below the fixed reference hull. The fitted query score is shown from recorded components." width="100%"></picture>
-
-[Follow the worked case](docs/presentation/README.md) · [Download its native records and runnable source](https://raw.githubusercontent.com/nazeeh111/MaterialMind/refs/heads/main/docs/presentation/worked-example.zip) · [Read the scientific report](docs/REPORT.md)
+<picture><source media="(max-width: 600px)" srcset="docs/presentation/query-mobile.svg"><img src="docs/presentation/query.svg" alt="PaMnF6 initial crystal, model interval, and archived WBM DFT reference outside the interval, shown on the same signed energy scale." width="100%"></picture>
 
 This release uses **3,072 existing WBM structures**, with **641 candidates in the final chemical-system-held-out pool**. It performs retrospective prediction and label replay, not new DFT, synthesis or an official blind benchmark. The fitted policy **did not outperform adapted greedy** in the released study.
 
@@ -35,11 +27,9 @@ The package includes frozen graph features and source predictions, so the demo d
 download a model. First startup fits the small residual model from the included data.
 The server is intended for local research and binds to loopback.
 
-1. Select a candidate to inspect its actual initial unit cell, composition, and symmetry.
-2. Compare its signed hull-distance estimate, 90% calibrated interval, stability probability,
-   structural novelty, and stated cost proxy.
-3. Reveal a **previously computed DFT reference**. The session updates its surrogate using
-   that label and recalculates its rankings. Unselected labels remain absent from the API catalog.
+1. The fresh lab opens on the highest-ranked candidate. Inspect its signed energy interval under **Stability outlook**. Use **Change crystal** to choose another candidate on a phone.
+2. Choose **Reveal DFT reference**. The result compares the saved selection-time interval with the already computed WBM label and reports the threshold outcome separately. The current estimate updates after the reveal.
+3. Orbit the initial unit cell and inspect composition, symmetry, structural novelty, and cost proxy. Unselected references remain absent from the API catalog.
 4. Inspect the saved benchmark under different evaluation or proxy-cost budgets. Export a
    CIF or a complete session record with crystal coordinates, predictions, model revision,
    decision history, and revealed references. Imported geometry remains in the downloaded

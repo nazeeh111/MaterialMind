@@ -27,15 +27,47 @@ function select(candidate,keepFocus=false){state.selected=candidate;const p=cand
   const weights=p.acquisition_weights;const fittedReason=weights?`Probability ${percent(p.p_stable)}. ${numeric(weights.exploration,0)>0?`Exploration weight ${format(weights.exploration,2)}; `:''}${numeric(weights.diversity,0)>0?`novelty weight ${format(weights.diversity,2)}; `:''}${numeric(weights.cost_exponent,0)>0?`relative-cost exponent ${format(weights.cost_exponent,2)}.`:'no cost penalty.'}${numeric(weights.exploration,0)===0?' No explicit exploration bonus.':''}${numeric(weights.diversity,0)===0?' No novelty bonus.':''}`:null;$('rationale').textContent=p.rationale||fittedReason||p.acquisition_note||(candidate.prediction_status&&probability===null?String(candidate.prediction_status):`${sentence} Inspect the saved method and reference replay before treating this ranking as evidence of discovery.`);
   $('element-legend').innerHTML=(candidate.elements||[]).map(e=>`<span class="element-item"><i style="--element:${elementColor(e)}"></i>${esc(e)}</span>`).join('');
   viewer.setStructure(candidate.structure);updateRevealState();renderList(keepFocus?candidate.id:null);}
+function describeReference(entry) {
+  const reference = numeric(entry.e_above_hull ?? entry.reference ?? entry.energy);
+  if (reference === null) return 'The saved reference has no available energy value.';
+
+  const prediction = entry.prediction_at_selection;
+  const low = numeric(prediction?.interval_low);
+  const high = numeric(prediction?.interval_high);
+  const stable = entry.stable ?? reference <= 0;
+  const source = entry.source || 'Previously computed WBM DFT';
+  const unit = 'eV/atom';
+  const energy = value => format(value, 6);
+  let intervalResult = 'Selection-time interval unavailable.';
+  let comparison = '';
+  if (low !== null && high !== null) {
+    const delta = reference > high ? reference - high : low - reference;
+    const position = reference > high ? 'above' : 'below';
+    comparison = reference >= low && reference <= high ? 'Reference falls within the interval.'
+      : `Reference is ${energy(delta)} ${unit} ${position} the interval.`;
+    intervalResult = `90% interval at selection: [${energy(low)}, ${energy(high)}] ${unit}.`;
+  }
+  const mean = numeric(prediction?.predicted_hull);
+  const threshold = stable ? 'Stable by the fixed hull criterion (≤ 0 eV/atom).' : 'Above the fixed hull threshold (0 eV/atom).';
+  const meanText = mean === null ? '' : `Selection-time estimate: ${energy(mean)} ${unit}.`;
+  const sourceText = source[0].toUpperCase() + source.slice(1);
+  return [comparison, `${sourceText}: ${energy(reference)} ${unit}.`, intervalResult, meanText, threshold]
+    .filter(Boolean).join('\n');
+}
 function updateRevealState(){const busy=sessionBusy();
   $('batch-open').disabled=busy;$('batch-preview').disabled=busy||state.batchLoading;$('batch-count').disabled=busy||state.batchLoading;
   $('batch-close').disabled=state.revealing;$('batch-reveal').disabled=busy||state.batchLoading||!state.batch?.recommendations?.length;
 $('picker-toggle').disabled=!state.sessionReady||state.needsRefresh||state.restoring||state.resetting;$('picker-review').disabled=!state.selected||state.needsRefresh;$('import-submit').disabled=busy;$('restore-submit').disabled=busy;$('replay-submit').disabled=busy;$('reset-session').disabled=busy;$('import-open').disabled=busy;$('restore-open').disabled=busy;$('export-session').disabled=busy||!state.candidates.length;const selected=state.selected,entry=state.history.find(x=>x.id===selected?.id);$('download-cif').disabled=busy||!selected;$('reveal-result').hidden=!entry;$('reveal').disabled=!selected||busy||selected.split==='imported'||Boolean(entry);$('reveal').innerHTML=state.revealing?'Revealing reference…':entry?'Reference already revealed ✓':selected?.split==='imported'?'No reference for imported structure':'Reveal DFT reference <span aria-hidden="true">→</span>';
-  if(entry){const e=numeric(entry.e_above_hull??entry.reference??entry.energy);const stable=e===null?null:(entry.stable??(e<=0));$('reveal-result').className=`reveal-result${stable===false?' unstable':''}`;$('reveal-result').textContent=e===null?'The saved reference has no available energy value.':`Previously computed DFT: ${format(e)} eV / atom · ${stable?'stable against the reference hull':'above the reference hull'}.`}}
+  if (entry) {
+    $('reveal-result').className = `reveal-result${entry.stable === false ? ' unstable' : ''}`;
+    $('reveal-result').textContent = describeReference(entry);
+  }
+}
 function renderHistory(){catalogueCount();$('log-evaluations').textContent=state.history.length;$('log-stable').textContent=state.history.filter(h=>{const e=numeric(h.e_above_hull??h.reference??h.energy);return e!==null&&(h.stable??(e<=0));}).length;$('log-cost').textContent=format(state.history.reduce((sum,h)=>sum+numeric(h.cost??state.candidates.find(c=>c.id===h.id)?.prediction.relative_cost,1),0),1);if(!state.history.length){$('history').innerHTML='<div class="empty"><span class="empty-symbol">⌁</span><strong>Your next decision starts here.</strong><p>Inspect a candidate, then reveal its reference. Every choice stays in this session’s exportable research record.</p></div>';return;}$('history').innerHTML=state.history.map((h,i)=>{const c=state.candidates.find(c=>c.id===h.id),energy=numeric(h.e_above_hull??h.reference??h.energy),stable=energy===null?null:(h.stable??(energy<=0));return `<div class="history-row"><span class="history-index">${String(i+1).padStart(2,'0')}</span><div><h4>${formulaHTML(h.formula||c?.formula||h.id)}</h4><p>${esc(h.id)}</p></div><span class="history-energy${stable===false?' unstable':''}">${format(energy)}<small>${stable===null?'REFERENCE UNAVAILABLE':stable?'DFT STABLE':'ABOVE HULL'} · eV / atom</small></span></div>`;}).reverse().join('');}
 async function reveal(batch=null){
   if(sessionBusy()||(!batch&&!state.selected))return;
   const selected=state.selected;
+  const focusResult = !batch && document.activeElement === $('reveal');
   state.revealing=true;error('');updateRevealState();let committed=false;
   try{
     const path=batch?'/api/recommendations/reveal':'/api/reveal';
@@ -52,6 +84,8 @@ async function reveal(batch=null){
       if(candidate)select(candidate);
     }
     renderHistory();renderList();updateReplayOrigin();
+    if (focusResult && state.selected?.id === selected.id && !$('reveal-result').hidden
+        && [document.body, $('reveal')].includes(document.activeElement)) $('reveal-result').focus();
     if(batch){$('batch-dialog').close();$('session-status').hidden=false;$('session-status').textContent=`Revealed ${result.results.length} references together. The selection model was updated once.`;}
   }catch(e){
     state.batch=null;
